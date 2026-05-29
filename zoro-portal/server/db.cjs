@@ -68,6 +68,9 @@ async function initDb() {
       upvotes INTEGER DEFAULT 0,
       is_accepted INTEGER DEFAULT 0,
       status TEXT DEFAULT 'pending',
+      sp_awarded INTEGER DEFAULT 0,
+      sp_points INTEGER DEFAULT 0,
+      rejection_reason TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (doubt_id) REFERENCES doubts(id),
       FOREIGN KEY (creator_id) REFERENCES users(id)
@@ -93,6 +96,21 @@ async function initDb() {
       body TEXT NOT NULL,
       created_by INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS sp_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      answer_id INTEGER,
+      amount INTEGER NOT NULL,
+      reason TEXT NOT NULL,
+      created_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (answer_id) REFERENCES answers(id),
       FOREIGN KEY (created_by) REFERENCES users(id)
     )
   `)
@@ -214,6 +232,80 @@ async function initDb() {
   } catch (e) {
     // Table may be fresh, ignore
   }
+
+  // Migration: add sp_awarded, sp_points, rejection_reason to answers
+  try {
+    const cols = db.exec("PRAGMA table_info(answers)")[0]
+    if (cols) {
+      const colNames = cols.values.map(r => r[1])
+      if (!colNames.includes('sp_awarded')) {
+        console.log('Migrating answers: adding sp_awarded, sp_points, rejection_reason...')
+        db.run('ALTER TABLE answers ADD COLUMN sp_awarded INTEGER DEFAULT 0')
+        db.run('ALTER TABLE answers ADD COLUMN sp_points INTEGER DEFAULT 0')
+        db.run('ALTER TABLE answers ADD COLUMN rejection_reason TEXT')
+        console.log('✅ answers sp columns migration complete')
+      }
+    }
+  } catch (e) { console.log('answers sp columns migration skipped:', e.message) }
+
+  // Migration: create sp_transactions table if not exists
+  try {
+    const existing = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='sp_transactions'")[0]
+    if (!existing) {
+      console.log('Creating sp_transactions table...')
+      db.run(`CREATE TABLE sp_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        answer_id INTEGER,
+        amount INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`)
+      console.log('✅ sp_transactions table created')
+    }
+  } catch (e) { console.log('sp_transactions table creation skipped:', e.message) }
+
+  // Migration: add status column to doubts table
+  try {
+    const cols = db.exec("PRAGMA table_info(doubts)")[0]
+    if (cols && !cols.values.some(row => row[1] === 'status')) {
+      console.log('Migrating doubts table to add status column...')
+      db.run("ALTER TABLE doubts ADD COLUMN status TEXT DEFAULT 'pending'")
+      // Migrate existing 'open' doubts to 'pending'
+      db.run("UPDATE doubts SET status = 'pending' WHERE status = 'open'")
+      console.log('✅ doubts.status migration complete')
+    }
+  } catch (e) { console.log('doubts.status migration skipped:', e.message) }
+
+  // Migration: add rejection_reason to doubts
+  try {
+    const cols = db.exec("PRAGMA table_info(doubts)")[0]
+    if (cols && !cols.values.some(row => row[1] === 'rejection_reason')) {
+      console.log('Migrating doubts table to add rejection_reason...')
+      db.run('ALTER TABLE doubts ADD COLUMN rejection_reason TEXT')
+      console.log('✅ doubts.rejection_reason migration complete')
+    }
+  } catch (e) { console.log('doubts.rejection_reason migration skipped:', e.message) }
+
+  // Migration: create moderation_logs table
+  try {
+    const existing = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='moderation_logs'")[0]
+    if (!existing) {
+      console.log('Creating moderation_logs table...')
+      db.run(`CREATE TABLE moderation_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        moderator_id INTEGER NOT NULL,
+        target_type TEXT NOT NULL,
+        target_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        detail TEXT,
+        sp_delta INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`)
+      console.log('✅ moderation_logs table created')
+    }
+  } catch (e) { console.log('moderation_logs table creation skipped:', e.message) }
 
   console.log('✅ Database initialized')
   return db

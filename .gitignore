@@ -1,0 +1,19 @@
+# Personal agent files
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
+AGENTS.md
+memory/
+.openclaw/
+
+# Other projects
+asme-landing/
+video-player/
+iDoubt-Solver.html
+
+# OS
+.DS_Store
+*.swp
+*.swo

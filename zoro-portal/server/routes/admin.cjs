@@ -6,14 +6,29 @@ const Anthropic = require('@anthropic-ai/sdk')
 const router = express.Router()
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' })
 
+// Configurable SP reward amount (can be overridden via env)
+const SP_APPROVAL_REWARD = parseInt(process.env.SP_APPROVAL_REWARD || '10', 10)
+
+// Helper: write a moderation log entry
+function logModeration(db, moderatorId, targetType, targetId, action, detail, spDelta = 0) {
+  db.prepare(
+    'INSERT INTO moderation_logs (moderator_id, target_type, target_id, action, detail, sp_delta) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(moderatorId, targetType, targetId, action, detail, spDelta)
+}
+
 router.get('/stats', authenticate, requireAdmin, (req, res) => {
-  const total = getDb().prepare('SELECT COUNT(*) as c FROM doubts').get().c
-  const resolved = getDb().prepare("SELECT COUNT(*) as c FROM doubts WHERE status = 'resolved'").get().c
-  const pending = getDb().prepare("SELECT COUNT(*) as c FROM doubts WHERE status = 'open'").get().c
-  const feedback = getDb().prepare('SELECT COUNT(*) as c FROM zoro_feedback').get().c
-  const users = getDb().prepare('SELECT COUNT(*) as c FROM users WHERE role = "user"').get().c
-  const faqs = getDb().prepare('SELECT COUNT(*) as c FROM faq_items').get().c
-  res.json({ total, resolved, pending, feedback, users, faqs })
+  const db = getDb()
+  const total = db.prepare('SELECT COUNT(*) as c FROM doubts').get().c
+  const resolved = db.prepare("SELECT COUNT(*) as c FROM doubts WHERE status = 'resolved'").get().c
+  const approved = db.prepare("SELECT COUNT(*) as c FROM doubts WHERE status = 'approved'").get().c
+  const pendingD = db.prepare("SELECT COUNT(*) as c FROM doubts WHERE COALESCE(status, 'pending') = 'pending'").get().c
+  const rejectedD = db.prepare("SELECT COUNT(*) as c FROM doubts WHERE status = 'rejected'").get().c
+  const feedback = db.prepare('SELECT COUNT(*) as c FROM zoro_feedback').get().c
+  const users = db.prepare('SELECT COUNT(*) as c FROM users WHERE role = "user"').get().c
+  const faqs = db.prepare('SELECT COUNT(*) as c FROM faq_items').get().c
+  const totalSP = db.prepare('SELECT COALESCE(SUM(sp_points), 0) as s FROM users').get().s
+  const pendingAns = db.prepare("SELECT COUNT(*) as c FROM answers WHERE COALESCE(status, 'pending') = 'pending'").get().c
+  res.json({ total, resolved, approved: approved, pendingD, rejectedD, feedback, users, faqs, totalSP, pendingAns })
 })
 
 router.get('/doubts', authenticate, requireAdmin, (req, res) => {
@@ -39,9 +54,75 @@ router.get('/users', authenticate, requireAdmin, (req, res) => {
   res.json({ users })
 })
 
+// Get SP transactions (all or filtered by user)
+router.get('/sp-transactions', authenticate, requireAdmin, (req, res) => {
+  const db = getDb()
+  const { user_id } = req.query
+  let sql = `
+    SELECT t.*, u.username as target_user, a.body as answer_preview, c.username as created_by_name
+    FROM sp_transactions t
+    LEFT JOIN users u ON t.user_id = u.id
+    LEFT JOIN answers a ON t.answer_id = a.id
+    LEFT JOIN users c ON t.created_by = c.id
+  `
+  const params = []
+  if (user_id) {
+    sql += ' WHERE t.user_id = ?'
+    params.push(user_id)
+  }
+  sql += ' ORDER BY t.created_at DESC LIMIT 100'
+  const transactions = db.prepare(sql).all(...params)
+  res.json({ transactions })
+})
+
+// Get SP stats (total, per-user breakdown, recent)
+router.get('/sp-stats', authenticate, requireAdmin, (req, res) => {
+  const db = getDb()
+  const totalSP = db.prepare('SELECT COALESCE(SUM(sp_points), 0) as s FROM users').get().s
+  const totalAwards = db.prepare("SELECT COUNT(*) as c FROM sp_transactions WHERE amount > 0").get().c
+  const totalDeducted = db.prepare("SELECT COUNT(*) as c FROM sp_transactions WHERE amount < 0").get().c
+  const recentTransactions = db.prepare(`
+    SELECT t.*, u.username as target_user, a.body as answer_preview
+    FROM sp_transactions t
+    LEFT JOIN users u ON t.user_id = u.id
+    LEFT JOIN answers a ON t.answer_id = a.id
+    ORDER BY t.created_at DESC LIMIT 10
+  `).all()
+  const topEarners = db.prepare('SELECT id, username, sp_points FROM users WHERE role = "user" ORDER BY sp_points DESC LIMIT 5').all()
+  res.json({ totalSP, totalAwards, totalDeducted, recentTransactions, topEarners, SP_APPROVAL_REWARD })
+})
+
+// Get a specific user's SP history
+router.get('/sp-history/:userId', authenticate, requireAdmin, (req, res) => {
+  const db = getDb()
+  const user = db.prepare('SELECT id, username, sp_points FROM users WHERE id = ?').get(req.params.userId)
+  if (!user) return res.status(404).json({ error: 'User not found' })
+  const history = db.prepare(`
+    SELECT t.*, a.body as answer_preview, c.username as moderator_name
+    FROM sp_transactions t
+    LEFT JOIN answers a ON t.answer_id = a.id
+    LEFT JOIN users c ON t.created_by = c.id
+    WHERE t.user_id = ?
+    ORDER BY t.created_at DESC
+  `).all(req.params.userId)
+  res.json({ user, history })
+})
+
 router.get('/faq', authenticate, requireAdmin, (req, res) => {
   const items = getDb().prepare('SELECT * FROM faq_items ORDER BY created_at DESC').all()
   res.json({ items })
+})
+
+router.get('/moderation-logs', authenticate, requireAdmin, (req, res) => {
+  const db = getDb()
+  const logs = db.prepare(`
+    SELECT m.*, u.username as moderator_name
+    FROM moderation_logs m
+    LEFT JOIN users u ON m.moderator_id = u.id
+    ORDER BY m.created_at DESC
+    LIMIT 200
+  `).all()
+  res.json({ logs })
 })
 
 router.get('/announcements', authenticate, (req, res) => {
@@ -96,22 +177,62 @@ router.get('/answers', authenticate, requireAdmin, (req, res) => {
   res.json({ answers })
 })
 
+// Approve or reject an answer — full SP management
 router.patch('/answers/:id/status', authenticate, requireAdmin, (req, res) => {
-  const { status } = req.body
+  const { status, rejection_reason } = req.body
   if (!['pending', 'approved', 'rejected'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status. Must be pending, approved, or rejected.' })
   }
-  const answer = getDb().prepare('SELECT * FROM answers WHERE id = ?').get(req.params.id)
+
+  const db = getDb()
+  const answer = db.prepare('SELECT * FROM answers WHERE id = ?').get(req.params.id)
   if (!answer) return res.status(404).json({ error: 'Answer not found' })
 
-  getDb().prepare('UPDATE answers SET status = ? WHERE id = ?').run(status, req.params.id)
-
-  // Award SP only on approval (and only if not already approved)
   if (status === 'approved') {
-    getDb().prepare('UPDATE users SET sp_points = sp_points + 10 WHERE id = ?').run(answer.creator_id)
+    // Guard: prevent duplicate SP awards
+    const fresh = db.prepare('SELECT sp_awarded FROM answers WHERE id = ?').get(req.params.id)
+    if (fresh.sp_awarded) {
+      return res.status(409).json({ error: 'SP already awarded', spAwarded: true })
+    }
+    // Award SP
+    db.prepare('UPDATE answers SET status = ?, sp_awarded = 1, sp_points = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(status, SP_APPROVAL_REWARD, req.params.id)
+    db.prepare('UPDATE users SET sp_points = sp_points + ? WHERE id = ?')
+      .run(SP_APPROVAL_REWARD, answer.creator_id)
+    // SP transaction log
+    db.prepare(
+      'INSERT INTO sp_transactions (user_id, answer_id, amount, reason, created_by) VALUES (?, ?, ?, ?, ?)'
+    ).run(answer.creator_id, answer.id, SP_APPROVAL_REWARD,
+      `Answer approved — reward: "${(answer.body || '').slice(0, 50)}..."`, req.user.id)
+    // Moderation log
+    logModeration(db, req.user.id, 'answer', answer.id, 'approved',
+      `Approved answer by ${answer.creator_id}, awarded +${SP_APPROVAL_REWARD} SP`, SP_APPROVAL_REWARD)
+  } else if (status === 'rejected') {
+    db.prepare('UPDATE answers SET status = ?, rejection_reason = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(status, rejection_reason || null, req.params.id)
+    // Moderation log (no SP)
+    logModeration(db, req.user.id, 'answer', answer.id, 'rejected',
+      `Rejected answer${rejection_reason ? `: ${rejection_reason}` : ''}`, 0)
+  } else {
+    // Reset to pending — revoke SP if previously awarded
+    if (answer.sp_awarded && answer.sp_points > 0) {
+      db.prepare('UPDATE users SET sp_points = sp_points - ? WHERE id = ?')
+        .run(answer.sp_points, answer.creator_id)
+      db.prepare(
+        'INSERT INTO sp_transactions (user_id, answer_id, amount, reason, created_by) VALUES (?, ?, ?, ?, ?)'
+      ).run(answer.creator_id, answer.id, -answer.sp_points, 'Answer reset to pending — SP revoked', req.user.id)
+      // Revocation moderation log
+      logModeration(db, req.user.id, 'answer', answer.id, 'sp_revoked',
+        `Reset to pending, revoked ${answer.sp_points} SP from user ${answer.creator_id}`, -answer.sp_points)
+    } else {
+      logModeration(db, req.user.id, 'answer', answer.id, 'reset_pending',
+        'Reset answer to pending (no SP was awarded)', 0)
+    }
+    db.prepare('UPDATE answers SET status = ?, sp_awarded = 0, sp_points = 0, rejection_reason = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(status, req.params.id)
   }
 
-  const updated = getDb().prepare(`
+  const updated = db.prepare(`
     SELECT a.*, u.username as creator_name, d.title as doubt_title
     FROM answers a
     LEFT JOIN users u ON a.creator_id = u.id
@@ -119,6 +240,54 @@ router.patch('/answers/:id/status', authenticate, requireAdmin, (req, res) => {
     WHERE a.id = ?
   `).get(req.params.id)
   res.json({ answer: updated })
+})
+
+// Approve or reject a doubt
+router.patch('/doubts/:id/status', authenticate, requireAdmin, (req, res) => {
+  const { status, rejection_reason } = req.body
+  if (!['pending', 'approved', 'rejected', 'resolved'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status. Must be pending, approved, rejected, or resolved.' })
+  }
+
+  const db = getDb()
+  const doubt = db.prepare('SELECT * FROM doubts WHERE id = ?').get(req.params.id)
+  if (!doubt) return res.status(404).json({ error: 'Doubt not found' })
+
+  if (status === 'approved') {
+    db.prepare('UPDATE doubts SET status = ?, rejection_reason = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(status, req.params.id)
+    logModeration(db, req.user.id, 'doubt', doubt.id, 'approved',
+      `Approved doubt: "${(doubt.title || '').slice(0, 60)}"`, 0)
+  } else if (status === 'rejected') {
+    db.prepare('UPDATE doubts SET status = ?, rejection_reason = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(status, rejection_reason || null, req.params.id)
+    logModeration(db, req.user.id, 'doubt', doubt.id, 'rejected',
+      `Rejected doubt${rejection_reason ? `: ${rejection_reason}` : ''}`, 0)
+  } else {
+    db.prepare('UPDATE doubts SET status = ?, rejection_reason = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(status, req.params.id)
+    logModeration(db, req.user.id, 'doubt', doubt.id, status, `Set doubt status to ${status}`, 0)
+  }
+
+  const updated = db.prepare(`
+    SELECT d.*, u.username as creator_name
+    FROM doubts d
+    LEFT JOIN users u ON d.creator_id = u.id
+    WHERE d.id = ?
+  `).get(req.params.id)
+  res.json({ doubt: updated })
+})
+
+// Get all doubts for admin (includes pending)
+router.get('/doubts', authenticate, requireAdmin, (req, res) => {
+  const doubts = getDb().prepare(`
+    SELECT d.*, u.username as creator_name,
+           COALESCE(d.status, 'pending') as status
+    FROM doubts d
+    LEFT JOIN users u ON d.creator_id = u.id
+    ORDER BY d.created_at DESC
+  `).all()
+  res.json({ doubts })
 })
 
 router.post('/generate-answer', authenticate, requireAdmin, async (req, res) => {
