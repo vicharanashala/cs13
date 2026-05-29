@@ -48,7 +48,11 @@ export const admin = {
   updateFaq: (id: number, item: any) => api.put(`/admin/faq/${id}`, item),
   deleteFaq: (id: number) => api.delete(`/admin/faq/${id}`),
   generateAnswer: (doubt: string) => api.post('/admin/generate-answer', { doubt }),
-  updateAnswerStatus: (id: number, status: 'pending' | 'approved' | 'rejected') =>
-    api.patch(`/admin/answers/${id}/status`, { status }),
+  updateAnswerStatus: (id: number, status: 'pending' | 'approved' | 'rejected', rejection_reason?: string) =>
+    api.patch(`/admin/answers/${id}/status`, { status, rejection_reason }),
   listAnswers: () => api.get('/admin/answers'),
+  spStats: () => api.get('/admin/sp-stats'),
+  spHistory: (userId: number) => api.get(`/admin/sp-history/${userId}`),
+  spTransactions: (userId?: number) =>
+    api.get(userId ? `/admin/sp-transactions?user_id=${userId}` : '/admin/sp-transactions'),
 }

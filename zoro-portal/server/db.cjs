@@ -68,6 +68,9 @@ async function initDb() {
       upvotes INTEGER DEFAULT 0,
       is_accepted INTEGER DEFAULT 0,
       status TEXT DEFAULT 'pending',
+      sp_awarded INTEGER DEFAULT 0,
+      sp_points INTEGER DEFAULT 0,
+      rejection_reason TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (doubt_id) REFERENCES doubts(id),
       FOREIGN KEY (creator_id) REFERENCES users(id)
@@ -93,6 +96,21 @@ async function initDb() {
       body TEXT NOT NULL,
       created_by INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `)
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS sp_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      answer_id INTEGER,
+      amount INTEGER NOT NULL,
+      reason TEXT NOT NULL,
+      created_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (answer_id) REFERENCES answers(id),
       FOREIGN KEY (created_by) REFERENCES users(id)
     )
   `)
@@ -214,6 +232,39 @@ async function initDb() {
   } catch (e) {
     // Table may be fresh, ignore
   }
+
+  // Migration: add sp_awarded, sp_points, rejection_reason to answers
+  try {
+    const cols = db.exec("PRAGMA table_info(answers)")[0]
+    if (cols) {
+      const colNames = cols.values.map(r => r[1])
+      if (!colNames.includes('sp_awarded')) {
+        console.log('Migrating answers: adding sp_awarded, sp_points, rejection_reason...')
+        db.run('ALTER TABLE answers ADD COLUMN sp_awarded INTEGER DEFAULT 0')
+        db.run('ALTER TABLE answers ADD COLUMN sp_points INTEGER DEFAULT 0')
+        db.run('ALTER TABLE answers ADD COLUMN rejection_reason TEXT')
+        console.log('✅ answers sp columns migration complete')
+      }
+    }
+  } catch (e) { console.log('answers sp columns migration skipped:', e.message) }
+
+  // Migration: create sp_transactions table if not exists
+  try {
+    const existing = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='sp_transactions'")[0]
+    if (!existing) {
+      console.log('Creating sp_transactions table...')
+      db.run(`CREATE TABLE sp_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        answer_id INTEGER,
+        amount INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`)
+      console.log('✅ sp_transactions table created')
+    }
+  } catch (e) { console.log('sp_transactions table creation skipped:', e.message) }
 
   console.log('✅ Database initialized')
   return db

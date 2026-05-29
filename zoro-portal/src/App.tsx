@@ -11,7 +11,12 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const FAQPage = lazy(() => import('./pages/FAQPage'))
 const DoubtSolverPage = lazy(() => import('./pages/DoubtSolverPage'))
 const ZoroPage = lazy(() => import('./pages/ZoroPage'))
-const AdminPage = lazy(() => import('./pages/AdminPage'))
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const AnswerModeration = lazy(() => import('./pages/admin/AnswerModeration'))
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'))
+const ModLogs = lazy(() => import('./pages/admin/ModLogs'))
+const SPTransactions = lazy(() => import('./pages/admin/SPTransactions'))
 
 function PageLoader() {
   return (
@@ -61,7 +66,13 @@ function AnimatedRoutes() {
             <Route path="/faq" element={<ProtectedRoute><FAQPage /></ProtectedRoute>} />
             <Route path="/doubts" element={<ProtectedRoute><DoubtSolverPage /></ProtectedRoute>} />
             <Route path="/zoro" element={<ProtectedRoute><ZoroPage /></ProtectedRoute>} />
-            <Route path="/admin-x9k2" element={<AdminRoute><AdminPage /></AdminRoute>} />
+            <Route path="/admin-x9k2" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="moderation" element={<AnswerModeration />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="logs" element={<ModLogs />} />
+              <Route path="sp" element={<SPTransactions />} />
+            </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Suspense>
