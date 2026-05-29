@@ -19,8 +19,6 @@ interface Answer {
   doubt_id: number
   doubt_title: string
   status: 'pending' | 'approved' | 'rejected'
-  sp_awarded?: number
-  sp_points?: number
   rejection_reason?: string
   created_at: string
 }
@@ -51,7 +49,7 @@ function RejectionModal({ answer, onConfirm, onCancel, processing }: {
           </div>
           <div>
             <h3 className="text-white font-bold text-base">Reject Answer</h3>
-            <p className="text-white/40 text-xs">No SP will be awarded</p>
+            <p className="text-white/40 text-xs">This answer will be hidden from students</p>
           </div>
         </div>
 
@@ -115,10 +113,9 @@ export const AnswerModeration = memo(function AnswerModeration() {
     try {
       const { data } = await admin.updateAnswerStatus(id, 'approved')
       setAnswers(prev => prev.map(a => a.id === id ? data.answer : a))
-      toast.success(`✅ Approved — +${data.answer.sp_points || 10} SP awarded!`)
-    } catch (e: any) {
-      if (e.response?.status === 409) toast.error('⚠️ SP already awarded for this answer')
-      else toast.error('Action failed')
+      toast.success('✅ Answer approved — now visible to students')
+    } catch {
+      toast.error('Failed to approve')
     }
     setProcessing(null)
   }
@@ -182,7 +179,7 @@ export const AnswerModeration = memo(function AnswerModeration() {
             Answer Moderation
           </h1>
           <p className="text-white/35 text-sm mt-1">
-            Review community answers · Approve to award SP · Reject with optional reason
+            Review community answers · Approve to make public · Reject with optional reason
           </p>
         </div>
 
@@ -287,13 +284,9 @@ export const AnswerModeration = memo(function AnswerModeration() {
 
                         {/* Footer */}
                         <div className="flex items-center gap-4">
-                          {answer.status === 'approved' && answer.sp_awarded ? (
-                            <span className="text-yellow-400/80 text-xs font-semibold flex items-center gap-1">
-                              ⚡ +{answer.sp_points || 10} SP awarded
-                            </span>
-                          ) : answer.status === 'approved' ? (
-                            <span className="text-yellow-400/50 text-xs">⚡ SP pending</span>
-                          ) : null}
+                          {answer.status === 'approved' && (
+                            <span className="text-green-400/70 text-xs">✓ Public</span>
+                          )}
                           {answer.status === 'pending' && (
                             <span className="text-yellow-400/50 text-xs">⏳ Awaiting review</span>
                           )}
@@ -319,7 +312,7 @@ export const AnswerModeration = memo(function AnswerModeration() {
                                 onClick={() => handleApprove(answer.id)}
                                 className="cosmic-btn-approve"
                                 whileTap={{ scale: 0.92 }}
-                                title="Approve — awards SP points"
+                                title="Approve — make visible to students"
                               >
                                 <CheckCircle size={13} /> Approve
                               </motion.button>
@@ -327,7 +320,7 @@ export const AnswerModeration = memo(function AnswerModeration() {
                                 onClick={() => setRejectingAnswer(answer)}
                                 className="cosmic-btn-reject"
                                 whileTap={{ scale: 0.92 }}
-                                title="Reject — no SP"
+                                title="Reject — keep hidden"
                               >
                                 <XCircle size={13} /> Reject
                               </motion.button>

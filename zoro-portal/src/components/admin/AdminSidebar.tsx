@@ -1,15 +1,14 @@
 import { memo } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { BarChart3, MessageSquare, Users, ScrollText, Megaphone, LogOut, Shield, ChevronRight, Zap } from 'lucide-react'
+import { BarChart3, MessageSquare, Users, ScrollText, LogOut, Shield, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const NAV_ITEMS = [
-  { to: '/admin-x9k2',            label: 'Dashboard',     Icon: BarChart3,       end: true },
-  { to: '/admin-x9k2/moderation', label: 'Moderation',   Icon: MessageSquare },
-  { to: '/admin-x9k2/users',      label: 'Users & SP',   Icon: Users },
-  { to: '/admin-x9k2/logs',  label: 'Mod Logs',     Icon: ScrollText },
-  { to: '/admin-x9k2/sp',      label: 'SP Transactions', Icon: Zap },
+  { to: '/admin-x9k2',            label: 'Dashboard',    Icon: BarChart3,       end: true },
+  { to: '/admin-x9k2/moderation', label: 'Moderation',  Icon: MessageSquare },
+  { to: '/admin-x9k2/users',      label: 'Users',       Icon: Users },
+  { to: '/admin-x9k2/logs',       label: 'Mod Logs',    Icon: ScrollText },
 ]
 
 export const AdminSidebar = memo(function AdminSidebar() {

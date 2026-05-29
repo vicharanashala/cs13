@@ -16,7 +16,6 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const ModerationPage = lazy(() => import('./pages/admin/ModerationPage'))
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'))
 const ModLogs = lazy(() => import('./pages/admin/ModLogs'))
-const SPTransactions = lazy(() => import('./pages/admin/SPTransactions'))
 
 function PageLoader() {
   return (
@@ -71,7 +70,6 @@ function AnimatedRoutes() {
               <Route path="moderation" element={<ModerationPage />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="logs" element={<ModLogs />} />
-              <Route path="sp" element={<SPTransactions />} />
             </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>

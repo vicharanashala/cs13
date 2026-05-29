@@ -300,8 +300,7 @@ async function initDb() {
         target_id INTEGER NOT NULL,
         action TEXT NOT NULL,
         detail TEXT,
-        sp_delta INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`)
       console.log('✅ moderation_logs table created')
     }

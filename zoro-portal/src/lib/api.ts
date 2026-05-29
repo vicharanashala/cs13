@@ -53,9 +53,5 @@ export const admin = {
   updateDoubtStatus: (id: number, status: 'pending' | 'approved' | 'rejected' | 'resolved', rejection_reason?: string) =>
     api.patch(`/admin/doubts/${id}/status`, { status, rejection_reason }),
   listAnswers: () => api.get('/admin/answers'),
-  spStats: () => api.get('/admin/sp-stats'),
-  spHistory: (userId: number) => api.get(`/admin/sp-history/${userId}`),
-  spTransactions: (userId?: number) =>
-    api.get(userId ? `/admin/sp-transactions?user_id=${userId}` : '/admin/sp-transactions'),
   moderationLogs: () => api.get('/admin/moderation-logs'),
 }

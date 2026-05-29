@@ -1,15 +1,14 @@
 import { memo, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ScrollText, Loader2, CheckCircle, XCircle, Clock, RotateCcw, Zap, CheckCheck } from 'lucide-react'
+import { ScrollText, Loader2, CheckCircle, XCircle, Clock, RotateCcw, CheckCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { admin } from '../../lib/api'
 
 const ACTION_CONFIG: Record<string, { label: string; dot: string; color: string; icon: any }> = {
-  approved:       { label: 'Approved',     dot: '#22c55e', color: 'text-green-400',  icon: CheckCircle },
-  rejected:       { label: 'Rejected',     dot: '#ef4444', color: 'text-red-400',    icon: XCircle },
-  reset_pending:  { label: 'Reset',        dot: '#6b7280', color: 'text-gray-400',   icon: RotateCcw },
-  sp_revoked:     { label: 'SP Revoked',   dot: '#f59e0b', color: 'text-yellow-400', icon: Zap },
-  resolved:       { label: 'Resolved',     dot: '#3b82f6', color: 'text-blue-400',   icon: CheckCheck },
+  approved:      { label: 'Approved',    dot: '#22c55e', color: 'text-green-400',  icon: CheckCircle },
+  rejected:      { label: 'Rejected',    dot: '#ef4444', color: 'text-red-400',    icon: XCircle },
+  reset_pending: { label: 'Reset',       dot: '#6b7280', color: 'text-gray-400',   icon: RotateCcw },
+  resolved:      { label: 'Resolved',    dot: '#3b82f6', color: 'text-blue-400',   icon: CheckCheck },
 }
 
 interface ModLog {
@@ -20,7 +19,6 @@ interface ModLog {
   target_id: number
   action: string
   detail: string
-  sp_delta: number
   created_at: string
 }
 
@@ -138,11 +136,7 @@ export const ModLogs = memo(function ModLogs() {
                             <span className={`text-xs font-bold uppercase ${cfg.color}`}>{cfg.label}</span>
                             <span className="text-white/40 text-xs">a {log.target_type}</span>
                             <span className="text-white/20 text-xs">by {log.moderator_name || 'System'}</span>
-                            {log.sp_delta !== 0 && (
-                              <span className={`text-xs font-bold ${log.sp_delta > 0 ? 'text-yellow-400' : 'text-red-400'}`}>
-                                {log.sp_delta > 0 ? '+' : ''}{log.sp_delta} SP
-                              </span>
-                            )}
+
                           </div>
                           <p className="text-white/50 text-sm leading-relaxed">{log.detail}</p>
                           <p className="text-white/20 text-xs mt-1">

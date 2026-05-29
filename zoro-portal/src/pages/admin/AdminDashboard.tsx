@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { MessageSquare, Users, HelpCircle, TrendingUp, CheckCircle, Clock, ArrowRight, Zap } from 'lucide-react'
+import { MessageSquare, Users, HelpCircle, TrendingUp, CheckCircle, Clock, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { admin } from '../../lib/api'
 
@@ -19,7 +19,6 @@ const STAT_CARDS = [
   { label: 'Pending Answers', key: 'pendingAns', Icon: MessageSquare, color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
   { label: 'Approved',        key: 'approved',   Icon: CheckCircle,   color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
   { label: 'Rejected',        key: 'rejectedD',  Icon: CheckCircle,   color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-  { label: 'Total SP',        key: 'totalSP',    Icon: Zap,           color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
   { label: 'Users',           key: 'users',      Icon: Users,         color: '#ec4899', bg: 'rgba(236,72,153,0.12)' },
 ]
 
@@ -152,7 +151,6 @@ export const AdminDashboard = memo(function AdminDashboard() {
               { label: 'Answers',      sub: `${stats.pendingAns || 0} pending`, color: '#3b82f6', action: () => navigate('/admin-x9k2/moderation') },
               { label: 'Users & SP',   sub: `${stats.users || 0} users`, color: '#ec4899', action: () => navigate('/admin-x9k2/users') },
               { label: 'Mod Logs',     sub: 'Audit trail', color: '#06b6d4', action: () => navigate('/admin-x9k2/logs') },
-              { label: 'SP Trans.',    sub: 'SP history', color: '#fbbf24', action: () => navigate('/admin-x9k2/sp') },
               { label: 'All Pending',  sub: `${(stats.pendingD || 0) + (stats.pendingAns || 0)} total`, color: '#fbbf24', action: () => navigate('/admin-x9k2/moderation') },
             ].map(({ label, sub, color, action }) => (
               <motion.button key={label} onClick={action}
