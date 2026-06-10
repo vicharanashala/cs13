@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samagama · IIT Ropar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--bg2:#0c0f1a;--bg3:#111827;
+  --gl:rgba(255,255,255,0.04);--gl2:rgba(255,255,255,0.07);--gl3:rgba(255,255,255,0.12);
+  --bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.13);--bd3:rgba(255,255,255,0.22);
+  --tx:#eef0f6;--mu:#6b7280;--mu2:#9ca3af;
+  --v:#7c6ff7;--v2:#a78bfa;--v3:#c4b5fd;
+  --t:#00c9a7;--t2:#34d399;
+  --y:#fbbf24;--r:#f87171;
+  --font-d:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;--font-m:'JetBrains Mono',monospace;
+  --rad:12px;--rad2:18px;--rad3:26px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:var(--font-b);font-size:15px;line-height:1.6;overflow-x:hidden;cursor:none;min-height:100vh}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(124,111,247,.4);border-radius:4px}
+button{font-family:var(--font-b)}
+
+/* CURSOR */
+#CU{position:fixed;width:10px;height:10px;background:var(--v);border-radius:50%;pointer-events:none;z-index:9999;mix-blend-mode:screen;top:0;left:0;transition:transform .1s}
+#CR{position:fixed;width:32px;height:32px;border:1px solid rgba(124,111,247,.4);border-radius:50%;pointer-events:none;z-index:9998;top:0;left:0;transition:width .2s,height .2s}
+
+/* CANVAS */
+#bgc{position:fixed;inset:0;pointer-events:none;z-index:0}
+.blob{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;animation:bf 14s ease-in-out infinite alternate}
+.b1{width:600px;height:600px;background:rgba(124,111,247,.07);top:-150px;left:-150px}
+.b2{width:450px;height:450px;background:rgba(0,201,167,.05);bottom:50px;right:-80px;animation-delay:5s}
+.b3{width:320px;height:320px;background:rgba(251,191,36,.04);top:45%;left:45%;animation-delay:9s}
+@keyframes bf{from{transform:translate(0,0) scale(1)}to{transform:translate(25px,18px) scale(1.06)}}
+
+/* PAGE SYSTEM */
+.page{position:fixed;inset:0;z-index:10;overflow-y:auto;overflow-x:hidden;opacity:0;pointer-events:none;transform:translateY(16px) scale(.99);transition:opacity .35s cubic-bezier(.4,0,.2,1),transform .35s cubic-bezier(.4,0,.2,1)}
+.page.active{opacity:1;pointer-events:auto;transform:none}
+.page.exit{opacity:0;transform:translateY(-14px) scale(1.01)}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem;background:rgba(7,9,15,.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);flex-shrink:0}
+.nlogo{font-family:var(--font-d);font-size:17px;font-weight:800;background:linear-gradient(135deg,var(--v),var(--t));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.3px;cursor:none;flex-shrink:0}
+.nbadge{font-family:var(--font-m);font-size:10px;color:var(--mu);-webkit-text-fill-color:var(--mu);margin-left:8px}
+.nlinks{display:flex;gap:2px;list-style:none;align-items:center}
+.nlinks a,.nlinks button{display:flex;align-items:center;gap:5px;padding:6px 12px;color:var(--mu2);text-decoration:none;font-size:13px;font-weight:500;border-radius:8px;background:none;border:none;cursor:none;transition:all .2s;font-family:var(--font-b)}
+.nlinks a:hover,.nlinks button:hover{color:var(--tx);background:var(--gl2)}
+.nlinks a.act{color:var(--v2)}
+.nbtn-sign{padding:6px 14px !important;background:var(--gl2) !important;border:1px solid var(--bd2) !important;border-radius:8px !important;color:var(--tx) !important;-webkit-text-fill-color:var(--tx) !important;font-size:13px;font-weight:500}
+.nbtn-sign:hover{border-color:var(--v) !important;background:rgba(124,111,247,.1) !important}
+.nback{display:flex;align-items:center;gap:5px;color:var(--mu2);font-size:13px;cursor:none;background:none;border:none;font-family:var(--font-b);transition:color .2s;padding:0;flex-shrink:0}
+.nback:hover{color:var(--tx)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:10px;font-family:var(--font-b);font-size:14px;font-weight:600;cursor:none;transition:all .25s;text-decoration:none;border:none}
+.btn-p{background:var(--v);color:#fff;box-shadow:0 0 26px rgba(124,111,247,.28)}
+.btn-p:hover{background:#9288ff;transform:translateY(-2px);box-shadow:0 10px 36px rgba(124,111,247,.45)}
+.btn-s{background:var(--gl2);color:var(--tx);border:1px solid var(--bd2)}
+.btn-s:hover{background:var(--gl3);transform:translateY(-1px);border-color:var(--v)}
+.btn-sm{padding:7px 14px;font-size:13px;border-radius:8px}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:11px;font-family:var(--font-m)}
+.chip-v{background:rgba(124,111,247,.14);color:var(--v2);border:1px solid rgba(124,111,247,.22)}
+.chip-t{background:rgba(0,201,167,.11);color:var(--t);border:1px solid rgba(0,201,167,.2)}
+.chip-y{background:rgba(251,191,36,.11);color:var(--y);border:1px solid rgba(251,191,36,.2)}
+.chip-r{background:rgba(248,113,113,.11);color:var(--r);border:1px solid rgba(248,113,113,.2)}
+.chip-mu{background:var(--gl2);color:var(--mu2);border:1px solid var(--bd)}
+
+/* SIGN IN MODAL */
+#sign-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(10px)}
+#sign-modal.open{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--rad3);width:100%;max-width:420px;overflow:hidden;animation:modalIn .3s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(20px)}to{opacity:1;transform:none}}
+.modal-head{padding:28px 28px 0;text-align:center}
+.modal-logo{font-family:var(--font-d);font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--v),var(--t));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--mu2);margin-bottom:22px}
+.role-tabs{display:flex;background:var(--gl);border-radius:10px;padding:3px;margin:0 28px 22px;border:1px solid var(--bd)}
+.role-tab{flex:1;padding:9px;border-radius:8px;border:none;background:none;color:var(--mu2);font-size:13px;font-weight:500;cursor:none;transition:all .2s;font-family:var(--font-b);display:flex;align-items:center;justify-content:center;gap:6px}
+.role-tab.active{background:var(--v);color:#fff;box-shadow:0 2px 10px rgba(124,111,247,.4)}
+.modal-body{padding:0 28px 28px;display:flex;flex-direction:column;gap:10px}
+.modal-inp{width:100%;padding:12px 15px;background:var(--gl2);border:1px solid var(--bd2);border-radius:var(--rad);color:var(--tx);font-family:var(--font-b);font-size:14px;outline:none;transition:border-color .2s}
+.modal-inp:focus{border-color:var(--v)}
+.modal-inp::placeholder{color:var(--mu)}
+.modal-divider{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--mu);margin:4px 0}
+.modal-divider::before,.modal-divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+.google-btn{width:100%;padding:12px;background:var(--gl2);border:1px solid var(--bd2);border-radius:var(--rad);color:var(--tx);font-family:var(--font-b);font-size:14px;font-weight:500;cursor:none;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.google-btn:hover{background:var(--gl3);border-color:var(--bd3)}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--gl2);border:1px solid var(--bd);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:none;color:var(--mu2);font-size:14px;transition:all .2s}
+.modal-close:hover{color:var(--tx);background:var(--gl3)}
+.modal-role-note{font-size:11px;color:var(--mu);text-align:center;font-family:var(--font-m)}
+
+
+/* ══════════════════════════════
+   HOME
+══════════════════════════════ */
+.home-inner{max-width:1060px;margin:0 auto;padding:0 2rem 6rem;position:relative;z-index:1}
+.hero-wrap{min-height:calc(100vh - 56px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4rem 0 2.5rem}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;padding:5px 16px;background:rgba(124,111,247,.1);border:1px solid rgba(124,111,247,.25);border-radius:100px;font-size:11.5px;font-family:var(--font-m);color:var(--v2);margin-bottom:1.8rem;animation:fu .6s ease both}
+.pdot{width:6px;height:6px;background:var(--t);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.hero-h{font-family:var(--font-d);font-size:clamp(44px,7vw,88px);font-weight:800;line-height:1.01;letter-spacing:-2.5px;margin-bottom:1.3rem;animation:fu .6s .1s ease both}
+.grad-txt{background:linear-gradient(135deg,var(--v) 0%,var(--t) 50%,var(--y) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:shimmer 5s linear infinite}
+@keyframes shimmer{from{background-position:0%}to{background-position:200%}}
+.hero-sub{font-size:17px;color:var(--mu2);max-width:500px;margin:0 auto 2.2rem;font-weight:400;line-height:1.7;animation:fu .6s .2s ease both}
+.hero-sub em{color:var(--t);font-style:normal;font-weight:600}
+.hero-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:3rem;animation:fu .6s .3s ease both}
+@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Stats */
+.stats-bar{display:flex;background:var(--gl);border:1px solid var(--bd);border-radius:var(--rad2);overflow:hidden;animation:fu .6s .4s ease both;backdrop-filter:blur(8px)}
+.stat{flex:1;padding:18px 20px;text-align:center;position:relative}
+.stat+.stat::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:1px;background:var(--bd)}
+.stat-n{font-family:var(--font-d);font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--v),var(--t));-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:block}
+.stat-l{font-size:11px;color:var(--mu);font-family:var(--font-m);margin-top:2px}
+
+/* SP card on home */
+.sp-home-card{background:linear-gradient(135deg,rgba(124,111,247,.1),rgba(0,201,167,.06));border:1px solid rgba(124,111,247,.25);border-radius:var(--rad2);padding:22px 26px;margin-top:2.5rem;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;animation:fu .6s .5s ease both}
+.sp-home-left{display:flex;align-items:center;gap:16px}
+.sp-orb{width:50px;height:50px;background:linear-gradient(135deg,var(--v),var(--t));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.sp-title{font-family:var(--font-d);font-size:16px;font-weight:800}
+.sp-sub{font-size:12px;color:var(--mu2);margin-top:2px}
+.sp-breakdown{display:flex;gap:16px;flex-wrap:wrap}
+.sp-item{text-align:center}
+.sp-item-n{font-family:var(--font-d);font-size:18px;font-weight:800}
+.sp-item-l{font-size:10px;color:var(--mu);font-family:var(--font-m)}
+
+/* Feature cards */
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:3rem 0 1.5rem}
+.feat-card{background:var(--gl);border:1px solid var(--bd);border-radius:var(--rad3);padding:28px 24px;cursor:none;transition:all .32s cubic-bezier(.17,.67,.83,.67);position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:300px}
+.feat-card::before{content:'';position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .32s;pointer-events:none}
+.feat-card:hover{transform:translateY(-5px) scale(1.01);border-color:var(--bd2);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.feat-card:hover::before{opacity:1}
+.c-faq::before{background:linear-gradient(135deg,rgba(124,111,247,.08),transparent 70%)}
+.c-faq:hover{border-color:rgba(124,111,247,.35)!important;box-shadow:0 20px 60px rgba(124,111,247,.14)!important}
+.c-doubt::before{background:linear-gradient(135deg,rgba(0,201,167,.07),transparent 70%)}
+.c-doubt:hover{border-color:rgba(0,201,167,.3)!important;box-shadow:0 20px 60px rgba(0,201,167,.12)!important}
+.c-ai::before{background:linear-gradient(135deg,rgba(251,191,36,.07),transparent 70%)}
+.c-ai:hover{border-color:rgba(251,191,36,.3)!important;box-shadow:0 20px 60px rgba(251,191,36,.12)!important}
+.card-ico{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:18px;transition:transform .3s}
+.feat-card:hover .card-ico{transform:scale(1.1) rotate(4deg)}
+.card-h{font-family:var(--font-d);font-size:20px;font-weight:800;margin-bottom:7px;letter-spacing:-.2px}
+.card-p{font-size:13px;color:var(--mu2);line-height:1.7;flex:1}
+.card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd)}
+.card-meta{font-size:11px;font-family:var(--font-m);color:var(--mu)}
+.card-arr{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .3s;font-size:15px}
+.feat-card:hover .card-arr{transform:translateX(4px)}
+.c-faq .card-arr{background:rgba(124,111,247,.14);color:var(--v2)}
+.c-doubt .card-arr{background:rgba(0,201,167,.13);color:var(--t)}
+.c-ai .card-arr{background:rgba(251,191,36,.13);color:var(--y)}
+
+/* Trending strip */
+.trend-label{font-family:var(--font-m);font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.trend-label::after{content:'';flex:1;height:1px;background:var(--bd)}
+.trend-pills{display:flex;gap:7px;flex-wrap:wrap}
+.tpill{padding:6px 13px;background:var(--gl);border:1px solid var(--bd);border-radius:100px;font-size:12.5px;color:var(--mu2);cursor:none;transition:all .2s;white-space:nowrap}
+.tpill:hover{border-color:var(--bd2);color:var(--tx);background:var(--gl2)}
+
+/* ══════════════════════════════
+   FAQ PAGE
+══════════════════════════════ */
+.pw{max-width:1060px;margin:0 auto;padding:2rem 2rem 5rem;position:relative;z-index:1}
+.page-hero{padding:2rem 0 1.8rem;border-bottom:1px solid var(--bd);margin-bottom:1.8rem}
+.page-lbl{font-family:var(--font-m);font-size:10px;color:var(--v);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.page-ttl{font-family:var(--font-d);font-size:clamp(30px,4vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:.5rem}
+.page-sub{color:var(--mu2);font-size:14px}
+
+/* Search */
+.srch{position:relative;margin-bottom:1rem}
+.srch input{width:100%;padding:14px 18px 14px 48px;background:var(--gl2);border:1px solid var(--bd2);border-radius:var(--rad2);color:var(--tx);font-family:var(--font-b);font-size:14px;outline:none;transition:all .22s}
+.srch input:focus{border-color:var(--v);box-shadow:0 0 0 3px rgba(124,111,247,.1)}
+.srch input::placeholder{color:var(--mu)}
+.srch-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:17px}
+
+/* Horizontal keyword pills */
+.kw-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.8rem}
+.kw{padding:5px 13px;background:var(--gl);border:1px solid var(--bd);border-radius:100px;font-size:12px;font-family:var(--font-m);color:var(--mu2);cursor:none;transition:all .2s;white-space:nowrap}
+.kw:hover,.kw.active{background:rgba(124,111,247,.14);border-color:rgba(124,111,247,.3);color:var(--v2)}
+
+/* FAQ layout */
+.faq-layout{display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:start}
+.faq-side{position:sticky;top:72px}
+.side-lbl{font-size:10px;font-family:var(--font-m);color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.scat{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--mu2);cursor:none;transition:all .18s;border:none;background:none;font-family:var(--font-b);width:100%;text-align:left}
+.scat:hover{color:var(--tx);background:var(--gl2)}
+.scat.active{color:var(--v2);background:rgba(124,111,247,.11)}
+.scat-cnt{margin-left:auto;font-size:10px;font-family:var(--font-m);opacity:.55}
+.faq-cat-section{background:var(--gl);border:1px solid var(--bd);border-radius:var(--rad2);overflow:hidden;margin-bottom:14px}
+.faq-cat-header{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:rgba(124,111,247,.03);border:none;cursor:none;font-family:var(--font-d);font-size:15px;color:var(--tx);transition:background .2s}
+.faq-cat-header:hover{background:rgba(124,111,247,.07)}
+.faq-cat-title{display:flex;gap:10px;align-items:center}
+.faq-cat-count{font-size:12px;color:var(--mu2);font-family:var(--font-m)}
+.faq-cat-body{max-height:0;overflow:hidden;transition:max-height .32s ease}
+.faq-cat-section.open .faq-cat-body{max-height:999px}
+.faq-item{border-top:1px solid var(--bd)}
+.faq-item:first-child{border-top:none}
+.faq-q{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:none}
+.faq-qt{font-size:14px;font-weight:500;flex:1}
+.faq-chev{color:var(--mu);font-size:13px;transition:transform .28s;flex-shrink:0}
+.faq-item.open .faq-chev{transform:rotate(180deg)}
+.faq-ans{max-height:0;overflow:hidden;transition:max-height .32s ease}
+.faq-item.open .faq-ans{max-height:400px}
+.faq-ans-in{padding:0 18px 18px;color:var(--mu2);font-size:13.5px;line-height:1.75;border-top:1px solid var(--bd);padding-top:13px}
+
+/* ══════════════════════════════
+   DOUBT SOLVER — REDDIT STYLE
+══════════════════════════════ */
+.doubt-wrap{max-width:1160px;margin:0 auto;padding:1.2rem 1.5rem 5rem;display:grid;grid-template-columns:210px 1fr 230px;gap:14px;position:relative;z-index:1}
+
+/* Sidebar left */
+.dside{position:sticky;top:70px;height:fit-content}
+.dside-card{background:var(--gl);border:1px solid var(--bd);border-radius:var(--rad2);padding:16px;margin-bottom:12px}
+.dside-h{font-family:var(--font-d);font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.dcat{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:12.5px;color:var(--mu2);cursor:none;transition:all .18s;border:none;background:none;font-family:var(--font-b);width:100%;text-align:left}
+.dcat:hover{color:var(--tx);background:var(--gl2)}
+.dcat.active{color:var(--t);background:rgba(0,201,167,.1)}
+
+/* Post thread */
+.ask-box{background:var(--gl);border:1px solid var(--bd2);border-radius:var(--rad2);padding:18px;margin-bottom:14px}
+.ask-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--v),var(--t));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:var(--font-d);flex-shrink:0;color:#fff}
+.ask-title-inp{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--rad);color:var(--tx);font-family:var(--font-b);font-size:14px;font-weight:600;outline:none;transition:border-color .2s;margin-bottom:8px}
+.ask-title-inp:focus{border-color:var(--v)}
+.ask-title-inp::placeholder{color:var(--mu)}
+.ask-body-inp{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rad);color:var(--tx);font-family:var(--font-b);font-size:13.5px;outline:none;transition:border-color .2s;resize:none;min-height:72px}
+.ask-body-inp:focus{border-color:var(--v)}
+.ask-body-inp::placeholder{color:var(--mu)}
+.ask-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ask-tags-row{display:flex;gap:6px;flex-wrap:wrap}
+.tag-select{padding:5px 10px;background:var(--gl2);border:1px solid var(--bd);border-radius:100px;color:var(--mu2);font-size:11px;font-family:var(--font-m);cursor:none;transition:all .18s}
+.tag-select:hover,.tag-select.sel{background:rgba(0,201,167,.1);border-color:rgba(0,201,167,.25);color:var(--t)}
+
+/* Reddit post card */
+.rpost{background:var(--gl);border:1px solid var(--bd);border-radius:var(--rad2);margin-bottom:10px;transition:all .22s;overflow:hidden}
+.rpost:hover{border-color:var(--bd2);transform:translateY(-1px)}
+.rpost.expanded{border-color:rgba(124,111,247,.25)}
+.rpost-main{display:flex;gap:0}
+/* Vote column */
+.vcol{width:44px;background:rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;flex-shrink:0;border-right:1px solid var(--bd)}
+.vbtn{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:none;transition:all .18s;font-size:14px;color:var(--mu);font-weight:700}
+.vbtn:hover{background:rgba(124,111,247,.15);color:var(--v2)}
+.vbtn.up-active{color:var(--v2)}
+.vbtn.dn-active{color:var(--r)}
+.vcnt{font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--mu2)}
+/* Post content */
+.rpost-body{padding:14px 16px;flex:1;min-width:0}
+.rpost-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.rpost-user{font-size:12px;font-family:var(--font-m);color:var(--mu2)}
+.rpost-time{font-size:11px;color:var(--mu);font-family:var(--font-m)}
+.rpost-h{font-size:15px;font-weight:600;margin-bottom:6px;line-height:1.35;cursor:none}
+.rpost-h:hover{color:var(--v2)}
+.rpost-excerpt{font-size:13px;color:var(--mu2);line-height:1.65;margin-bottom:10px}
+.rpost-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.rpost-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ract-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;font-size:12px;color:var(--mu);background:none;border:none;cursor:none;transition:all .18s;font-family:var(--font-b)}
+.ract-btn:hover{color:var(--tx);background:var(--gl2)}
+.solved-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:11px;background:rgba(0,201,167,.1);color:var(--t);border:1px solid rgba(0,201,167,.22);font-family:var(--font-m)}
+.sp-earned{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:11px;background:rgba(251,191,36,.1);color:var(--y);border:1px solid rgba(251,191,36,.22);font-family:var(--font-m);font-weight:700}
+
+/* Comments section */
+.comments-section{background:rgba(0,0,0,.12);border-top:1px solid var(--bd);padding:14px 16px 16px}
+.comment-input-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:14px}
+.comment-inp{flex:1;padding:9px 12px;background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--rad);color:var(--tx);font-family:var(--font-b);font-size:13px;outline:none;transition:border-color .2s;resize:none}
+.comment-inp:focus{border-color:var(--v)}
+.comment-inp::placeholder{color:var(--mu)}
+.comment-submit{padding:9px 14px;background:var(--v);border:none;border-radius:var(--rad);color:#fff;font-size:12px;cursor:none;transition:all .18s;font-family:var(--font-b);font-weight:600;white-space:nowrap}
+.comment-submit:hover{background:#9288ff}
+.comment{display:flex;gap:10px;margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid var(--bd)}
+.comment:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.comment-av{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-d)}
+.comment-content{flex:1}
+.comment-user{font-size:11px;font-family:var(--font-m);color:var(--mu2);margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.comment-text{font-size:13px;color:var(--tx);line-height:1.6;margin-bottom:4px}
+.comment-actions{display:flex;gap:10px}
+.cact{font-size:11px;color:var(--mu);background:none;border:none;cursor:none;font-family:var(--font-b);transition:color .18s;display:flex;align-items:center;gap:4px;padding:0}
+.cact:hover{color:var(--tx)}
+
+/* Right sidebar */
+.dside-r{position:sticky;top:70px;height:fit-content;display:flex;flex-direction:column;gap:12px}
+.contrib-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bd)}
+.contrib-row:last-child{border-bottom:none}
+.c-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:var(--font-d)}
+.c-name{font-size:12.5px;font-weight:500;flex:1}
+.c-pts{font-family:var(--font-d);font-size:12px;font-weight:800;background:linear-gradient(135deg,var(--v),var(--t));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ══════════════════════════════
+   AI COMPANION
+══════════════════════════════ */
+.ai-layout{display:grid;grid-template-columns:250px 1fr;height:calc(100vh - 56px);overflow:hidden}
+.ai-side{background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto}
+.ai-side-head{padding:20px 18px 16px;border-bottom:1px solid var(--bd)}
+.orb-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.orb{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--v),var(--t));display:flex;align-items:center;justify-content:center;font-size:22px;animation:orbp 3s ease-in-out infinite;flex-shrink:0}
+@keyframes orbp{0%,100%{box-shadow:0 0 0 0 rgba(124,111,247,.45)}50%{box-shadow:0 0 0 12px rgba(124,111,247,0)}}
+.orb-name{font-family:var(--font-d);font-size:15px;font-weight:800}
+.orb-stat{font-size:11px;color:var(--t);font-family:var(--font-m);display:flex;align-items:center;gap:5px}
+.orb-stat::before{content:'';width:5px;height:5px;background:var(--t);border-radius:50%;animation:pulse 2s infinite}
+.ai-sec{padding:12px 14px;border-bottom:1px solid var(--bd)}
+.ai-sec:last-child{border-bottom:none;flex:1}
+.ai-sec-lbl{font-size:10px;font-family:var(--font-m);color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.ai-mode{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--mu2);cursor:none;transition:all .18s;border:none;background:none;font-family:var(--font-b);width:100%;text-align:left}
+.ai-mode:hover{color:var(--tx);background:var(--gl3)}
+.ai-mode.active{color:var(--v2);background:rgba(124,111,247,.11)}
+.ai-mode-ico{font-size:15px;width:20px;text-align:center}
+/* Chat */
+.ai-chat{display:flex;flex-direction:column;overflow:hidden}
+.chat-hdr{padding:14px 22px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px;background:rgba(7,9,15,.6);backdrop-filter:blur(10px);flex-shrink:0}
+.chat-mode-nm{font-family:var(--font-d);font-size:15px;font-weight:700}
+.chat-mode-sb{font-size:11.5px;color:var(--mu2);font-family:var(--font-m)}
+.chat-msgs{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;max-width:82%}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;background:linear-gradient(135deg,var(--v),var(--t))}
+.msg.user .msg-av{background:var(--gl3);font-size:11px}
+.msg-bub{padding:11px 15px;border-radius:14px;font-size:13.5px;line-height:1.65}
+.msg .msg-bub{background:var(--gl2);border:1px solid var(--bd);color:var(--tx);border-bottom-left-radius:4px}
+.msg.user .msg-bub{background:var(--v);color:#fff;border-bottom-right-radius:4px}
+.typing{display:flex;gap:4px;padding:2px 0}
+.typing span{width:5px;height:5px;background:var(--mu);border-radius:50%;animation:td 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+.chat-bottom{flex-shrink:0;border-top:1px solid var(--bd);background:var(--bg2)}
+.sugg-row{padding:10px 18px 0;display:flex;gap:6px;flex-wrap:wrap}
+.sugg{padding:5px 11px;background:rgba(124,111,247,.09);border:1px solid rgba(124,111,247,.18);border-radius:100px;font-size:11px;color:var(--v2);cursor:none;transition:all .18s;font-family:var(--font-m)}
+.sugg:hover{background:rgba(124,111,247,.18);border-color:var(--v)}
+.chat-inp-row{display:flex;gap:9px;padding:12px 18px}
+.chat-inp{flex:1;padding:11px 14px;background:var(--gl2);border:1px solid var(--bd2);border-radius:var(--rad);color:var(--tx);font-family:var(--font-b);font-size:13.5px;outline:none;transition:border-color .2s;resize:none}
+.chat-inp:focus{border-color:var(--v)}
+.chat-inp::placeholder{color:var(--mu)}
+.chat-send{padding:0 16px;background:var(--v);border:none;border-radius:var(--rad);color:#fff;font-size:16px;cursor:none;transition:all .18s}
+.chat-send:hover{background:#9288ff;transform:scale(1.04)}
+/* AI panel */
+.ai-panel{padding:22px;flex:1;overflow-y:auto}
+.ai-pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.ai-pc{background:var(--gl);border:1px solid var(--bd);border-radius:var(--rad2);padding:20px;transition:all .22s;cursor:none}
+.ai-pc:hover{border-color:var(--bd2);transform:translateY(-2px)}
+.ai-pc-ico{font-size:26px;margin-bottom:10px}
+.ai-pc-h{font-family:var(--font-d);font-size:14px;font-weight:700;margin-bottom:5px}
+.ai-pc-p{font-size:12.5px;color:var(--mu2);line-height:1.6}
+
+/* ── Responsive ── */
+@media(max-width:960px){
+  .cards-grid{grid-template-columns:1fr}
+  .faq-layout{grid-template-columns:1fr}
+  .faq-side{display:flex;gap:5px;flex-wrap:wrap;position:static}
+  .doubt-wrap{grid-template-columns:1fr}
+  .dside,.dside-r{display:none}
+  .ai-layout{grid-template-columns:1fr}
+  .ai-side{display:none}
+  body{cursor:auto}
+  #CU,#CR{display:none}
+}
+@media(max-width:600px){
+  .stats-bar{flex-direction:column}
+  .stat+.stat::before{display:none}
+  nav{padding:0 1rem}
+  .nlinks a,.nlinks button{padding:5px 8px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<canvas id="bgc"></canvas>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div id="CU"></div><div id="CR"></div>
+
+<!-- ════ SIGN IN MODAL ════ -->
+<div id="sign-modal">
+  <div style="position:relative">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-logo">Samagama</div>
+        <div class="modal-sub">Sign in to access your dashboard, SP points & community</div>
+      </div>
+      <div class="role-tabs" id="role-tabs">
+        <button class="role-tab active" id="tab-intern" onclick="setRole('intern')">🎓 Intern / Student</button>
+        <button class="role-tab" id="tab-admin" onclick="setRole('admin')">🏛️ Admin / Faculty</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-role-note" id="role-note">Signing in as: <strong style="color:var(--v2)">Student / Intern</strong></div>
+        <input class="modal-inp" type="email" placeholder="Email address (college email preferred)" style="margin-top:8px">
+        <input class="modal-inp" type="password" placeholder="Password">
+        <button class="btn btn-p" style="width:100%;justify-content:center;padding:12px" onclick="signIn()">Sign in →</button>
+        <div class="modal-divider">or</div>
+        <button class="google-btn" onclick="signIn()">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+        <div class="modal-role-note" style="margin-top:4px">No account? <a href="#" style="color:var(--v2);text-decoration:none">Request access →</a></div>
+      </div>
+    </div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+</div>
+
+<!-- ════ HOME ════ -->
+<div class="page active" id="page-home">
+  <nav>
+    <div style="display:flex;align-items:center;flex-shrink:0">
+      <span class="nlogo">Samagama</span>
+      <span class="nbadge">IIT Ropar</span>
+    </div>
+    <ul class="nlinks">
+      <li><button onclick="nav('faq')" class="act">FAQ</button></li>
+      <li><button onclick="nav('doubt')">Doubts</button></li>
+      <li><button onclick="nav('ai')">✦ Yaksha</button></li>
+      <li><button class="nbtn-sign" onclick="openModal()">Sign in</button></li>
+    </ul>
+  </nav>
+  <div class="home-inner">
+    <div class="hero-wrap">
+      <div class="hero-pill"><span class="pdot"></span>Vicharanashala · IIT Ropar Internship Portal</div>
+      <h1 class="hero-h">Don't sign in yet.<br><span class="grad-txt">Read first.</span></h1>
+      <p class="hero-sub">Almost every question has been asked before — usually by someone else, fifteen minutes earlier. Meet <em>Yaksha</em>. It's been waiting.</p>
+      <div class="hero-actions">
+        <button class="btn btn-p" onclick="nav('faq')">Browse the FAQ →</button>
+        <button class="btn btn-s" onclick="nav('doubt')">💬 Community Doubts</button>
+      </div>
+      <div class="stats-bar">
+        <div class="stat"><span class="stat-n"><span class="cnt" data-t="2840">0</span>+</span><span class="stat-l">students helped</span></div>
+        <div class="stat"><span class="stat-n"><span class="cnt" data-t="9400">0</span>+</span><span class="stat-l">doubts solved</span></div>
+        <div class="stat"><span class="stat-n"><span class="cnt" data-t="340">0</span>+</span><span class="stat-l">contributors</span></div>
+        <div class="stat"><span class="stat-n"><span class="cnt" data-t="97">0</span>%</span><span class="stat-l">AI accuracy</span></div>
+      </div>
+    </div>
+
+    <!-- SP POINTS WIDGET -->
+    <div class="sp-home-card">
+      <div class="sp-home-left">
+        <div class="sp-orb">⚡</div>
+        <div>
+          <div class="sp-title">SP Points — Student Reputation</div>
+          <div class="sp-sub">Earn SP by answering doubts, helping peers, and daily contributions</div>
+        </div>
+      </div>
+      <div class="sp-breakdown">
+        <div class="sp-item">
+          <div class="sp-item-n" style="color:var(--v2)">+10</div>
+          <div class="sp-item-l">Accepted answer</div>
+        </div>
+        <div class="sp-item">
+          <div class="sp-item-n" style="color:var(--y)">+7</div>
+          <div class="sp-item-l">Highly useful</div>
+        </div>
+        <div class="sp-item">
+          <div class="sp-item-n" style="color:var(--t)">+3</div>
+          <div class="sp-item-l">Daily streak</div>
+        </div>
+        <div class="sp-item">
+          <div class="sp-item-n" style="color:var(--r)">−5</div>
+          <div class="sp-item-l">Spam/toxic</div>
+        </div>
+      </div>
+      <button class="btn btn-s btn-sm" onclick="openModal()">Sign in to view your SP →</button>
+    </div>
+
+    <!-- 3 CARDS -->
+    <div class="cards-grid">
+      <div class="feat-card c-faq" onclick="nav('faq')">
+        <div class="card-ico" style="background:rgba(124,111,247,.12)">📚</div>
+        <h3 class="card-h" style="color:var(--v2)">Smart FAQ</h3>
+        <p class="card-p">AI-powered knowledge hub with semantic search, trending questions, smart categories, and instant answers about the Samagama program.</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px">
+          <span class="chip chip-v">AI search</span>
+          <span class="chip chip-v">10 categories</span>
+          <span class="chip chip-v">Trending</span>
+        </div>
+        <div class="card-foot"><span class="card-meta">50+ FAQs · No login needed</span><span class="card-arr">→</span></div>
+      </div>
+      <div class="feat-card c-doubt" onclick="nav('doubt')">
+        <div class="card-ico" style="background:rgba(0,201,167,.1)">💬</div>
+        <h3 class="card-h" style="color:var(--t)">Doubt Solver</h3>
+        <p class="card-p">Reddit-style community Q&A with AI hints, upvotes, comment threads, solved badges, and SP Points rewards for helpful answers.</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px">
+          <span class="chip chip-t">Community</span>
+          <span class="chip chip-t">AI hints</span>
+          <span class="chip chip-t">SP Points</span>
+        </div>
+        <div class="card-foot"><span class="card-meta">340+ contributors</span><span class="card-arr">→</span></div>
+      </div>
+      <div class="feat-card c-ai" onclick="nav('ai')">
+        <div class="card-ico" style="background:rgba(251,191,36,.1)">✦</div>
+        <h3 class="card-h" style="color:var(--y)">Yaksha-mini</h3>
+        <p class="card-p">Your personal AI companion — internship guidance, resume review, interview prep, career roadmaps. No sign-in, no waiting.</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px">
+          <span class="chip chip-y">AI chat</span>
+          <span class="chip chip-y">Resume AI</span>
+          <span class="chip chip-y">Interview prep</span>
+        </div>
+        <div class="card-foot"><span class="card-meta">Powered by Anthropic</span><span class="card-arr">→</span></div>
+      </div>
+    </div>
+
+    <!-- Trending -->
+    <div style="margin-top:.5rem">
+      <div class="trend-label">🔥 Trending today</div>
+      <div class="trend-pills">
+        <span class="tpill" onclick="nav('faq')">NOC mandatory?</span>
+        <span class="tpill" onclick="nav('faq')">Stipend details</span>
+        <span class="tpill" onclick="nav('faq')">Final year eligible?</span>
+        <span class="tpill" onclick="nav('faq')">Remote available?</span>
+        <span class="tpill" onclick="nav('faq')">Application docs</span>
+        <span class="tpill" onclick="nav('doubt')">Best DSA resources</span>
+        <span class="tpill" onclick="nav('doubt')">SOP writing tips</span>
+        <span class="tpill" onclick="nav('doubt')">IIT Ropar interview prep</span>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:3.5rem 0 .5rem;border-top:1px solid var(--bd);margin-top:3rem">
+      <p style="font-size:13px;color:var(--mu)">Already applied? <button onclick="openModal()" style="color:var(--v2);text-decoration:none;background:none;border:none;cursor:none;font-family:var(--font-b);font-size:13px">Sign in here →</button></p>
+      <p style="font-size:11px;color:var(--mu);font-family:var(--font-m);margin-top:6px">samagama.in · Vicharanashala · IIT Ropar · v3.1</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════ FAQ ════ -->
+<div class="page" id="page-faq">
+  <nav>
+    <button class="nback" onclick="nav('home')">← Home</button>
+    <span class="nlogo" style="position:absolute;left:50%;transform:translateX(-50%)">FAQ</span>
+    <ul class="nlinks">
+      <li><button onclick="nav('doubt')">Doubts</button></li>
+      <li><button onclick="nav('ai')">✦ Yaksha</button></li>
+      <li><button class="nbtn-sign" onclick="openModal()">Sign in</button></li>
+    </ul>
+  </nav>
+  <div class="pw">
+    <div class="page-hero">
+      <div class="page-lbl">Knowledge Hub</div>
+      <h1 class="page-ttl">Every question, <span class="grad-txt">answered.</span></h1>
+      <p class="page-sub">Search the most complete FAQ database for the Samagama internship program.</p>
+    </div>
+    <!-- Search -->
+    <div class="srch">
+      <span class="srch-ico">🔍</span>
+      <input type="text" id="faq-q" placeholder="Search — 'stipend', 'NOC', 'certificate', 'remote', 'CGPA'..." oninput="filterFAQ(this.value)">
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:1rem">
+      <div style="flex:1;min-width:220px">
+        <label for="faq-cat-select" style="font-size:12px;color:var(--mu2);display:block;margin-bottom:6px">Filter by category</label>
+        <select id="faq-cat-select" style="width:100%;padding:11px 14px;background:var(--gl2);border:1px solid var(--bd2);border-radius:var(--rad2);color:var(--tx);font-family:var(--font-b);font-size:14px" onchange="catFAQSelect(this.value)">
+          <option value="all">All categories</option>
+          <option value="eligibility">Eligibility</option>
+          <option value="process">Process</option>
+          <option value="stipend">Stipend</option>
+          <option value="docs">Documents</option>
+          <option value="timeline">Timeline</option>
+          <option value="certificate">Certificate</option>
+          <option value="remote">Remote</option>
+          <option value="fee">Fees</option>
+        </select>
+      </div>
+      <div style="flex:2;min-width:240px;color:var(--mu2);font-size:13px">Tip: select a category to view only FAQs in that area. If you still don’t find an answer, ask Yaksha-mini at the bottom.</div>
+    </div>
+    <!-- Keyword pills (horizontal, like Google suggestions) -->
+    <div class="kw-row" id="kw-row">
+      <span class="kw active" data-c="all" onclick="catFAQ(this,'all')">All</span>
+      <span class="kw" data-c="eligibility" onclick="catFAQ(this,'eligibility')">Eligibility</span>
+      <span class="kw" data-c="process" onclick="catFAQ(this,'process')">Process</span>
+      <span class="kw" data-c="stipend" onclick="catFAQ(this,'stipend')">Stipend</span>
+      <span class="kw" data-c="docs" onclick="catFAQ(this,'docs')">Documents</span>
+      <span class="kw" data-c="timeline" onclick="catFAQ(this,'timeline')">Timeline</span>
+      <span class="kw" data-c="certificate" onclick="catFAQ(this,'certificate')">Certificate</span>
+      <span class="kw" data-c="remote" onclick="catFAQ(this,'remote')">Remote</span>
+      <span class="kw" data-c="fee" onclick="catFAQ(this,'fee')">Fees</span>
+    </div>
+    <!-- Layout -->
+    <div class="faq-layout">
+      <div class="faq-side">
+        <div class="side-lbl">Categories</div>
+        <button class="scat active" data-c="all" onclick="catFAQSide(this,'all')">📋 All <span class="scat-cnt">10</span></button>
+        <button class="scat" data-c="eligibility" onclick="catFAQSide(this,'eligibility')">👤 Eligibility <span class="scat-cnt">2</span></button>
+        <button class="scat" data-c="process" onclick="catFAQSide(this,'process')">⚙️ Process <span class="scat-cnt">2</span></button>
+        <button class="scat" data-c="stipend" onclick="catFAQSide(this,'stipend')">💰 Stipend <span class="scat-cnt">1</span></button>
+        <button class="scat" data-c="docs" onclick="catFAQSide(this,'docs')">📄 Documents <span class="scat-cnt">2</span></button>
+        <button class="scat" data-c="timeline" onclick="catFAQSide(this,'timeline')">📅 Timeline <span class="scat-cnt">1</span></button>
+        <button class="scat" data-c="certificate" onclick="catFAQSide(this,'certificate')">🎓 Certificate <span class="scat-cnt">1</span></button>
+        <button class="scat" data-c="remote" onclick="catFAQSide(this,'remote')">🌐 Remote <span class="scat-cnt">1</span></button>
+      </div>
+      <div id="faq-list-main"></div>
+    </div>
+    <div style="margin-top:2rem;padding:22px 24px;border-radius:var(--rad2);background:rgba(124,111,247,.07);border:1px solid rgba(124,111,247,.18);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:14px;font-family:var(--font-d);font-weight:700;margin-bottom:6px">Didn't find your answer?</div>
+          <div style="font-size:13px;color:var(--mu2);line-height:1.7">If the FAQ doesn't cover it yet, ask Yaksha-mini. We'll help you with the right internship guidance or route your question to the community.</div>
+        </div>
+        <button class="btn btn-p btn-sm" onclick="nav('ai')">Ask Yaksha-mini →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ DOUBT SOLVER ════ -->
+<div class="page" id="page-doubt">
+  <nav>
+    <button class="nback" onclick="nav('home')">← Home</button>
+    <span class="nlogo" style="position:absolute;left:50%;transform:translateX(-50%)">Doubt Solver</span>
+    <ul class="nlinks">
+      <li><button onclick="nav('faq')">FAQ</button></li>
+      <li><button onclick="nav('ai')">✦ Yaksha</button></li>
+      <li><button class="nbtn-sign" onclick="openModal()">Sign in</button></li>
+    </ul>
+  </nav>
+  <div class="doubt-wrap">
+    <!-- Left sidebar -->
+    <div class="dside">
+      <div class="dside-card">
+        <div class="dside-h">📂 Categories</div>
+        <button class="dcat active">🔀 All doubts</button>
+        <button class="dcat">💻 DSA</button>
+        <button class="dcat">🌐 Web Dev</button>
+        <button class="dcat">🤖 AI / ML</button>
+        <button class="dcat">📄 Resume</button>
+        <button class="dcat">🎓 Internships</button>
+        <button class="dcat">🏗️ Projects</button>
+        <button class="dcat">🤝 HR Interviews</button>
+        <button class="dcat">🧮 Aptitude</button>
+      </div>
+      <div class="dside-card" style="background:rgba(251,191,36,.04);border-color:rgba(251,191,36,.18)">
+        <div class="dside-h" style="color:var(--y)">⚡ Earn SP Points</div>
+        <div style="font-size:12px;color:var(--mu2);line-height:1.9">
+          <div>✅ Accepted answer <span style="color:var(--t);font-weight:700;float:right">+10 SP</span></div>
+          <div>👍 Helpful reply <span style="color:var(--y);font-weight:700;float:right">+5 SP</span></div>
+          <div>📅 Daily streak <span style="color:var(--v2);font-weight:700;float:right">+3 SP</span></div>
+          <div>💬 Post a doubt <span style="color:var(--mu2);font-weight:600;float:right">+1 SP</span></div>
+          <div>🚫 Spam <span style="color:var(--r);font-weight:700;float:right">−5 SP</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center feed -->
+    <div>
+      <div style="padding:1.2rem 0 1rem;border-bottom:1px solid var(--bd);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <h2 style="font-family:var(--font-d);font-size:20px;font-weight:800;letter-spacing:-.4px">Community Doubts</h2>
+          <p style="font-size:12px;color:var(--mu2);margin-top:2px">Ask · Answer · Earn SP · Grow together</p>
+        </div>
+        <div style="display:flex;gap:6px">
+          <span class="chip chip-t"><span class="pdot" style="width:5px;height:5px"></span>Live</span>
+          <span class="chip chip-mu">Sort: Hot</span>
+        </div>
+      </div>
+
+      <!-- Post a doubt -->
+      <div class="ask-box">
+        <div class="ask-top">
+          <div class="user-av">Y</div>
+          <span style="font-size:13px;color:var(--mu2)">Post a doubt — it will be reviewed by admin before publication. You can earn SP once the doubt is approved and answered.</span>
+        </div>
+        <input class="ask-title-inp" id="doubt-title" placeholder="What's your doubt? Write a clear title...">
+        <textarea class="ask-body-inp" id="doubt-body" placeholder="Describe in detail — what have you tried? What's confusing you?"></textarea>
+        <div class="ask-foot">
+          <div class="ask-tags-row" id="tag-row">
+            <span class="tag-select" onclick="toggleTag(this,'DSA')">💻 DSA</span>
+            <span class="tag-select" onclick="toggleTag(this,'Web Dev')">🌐 Web Dev</span>
+            <span class="tag-select" onclick="toggleTag(this,'AI/ML')">🤖 AI/ML</span>
+            <span class="tag-select" onclick="toggleTag(this,'Resume')">📄 Resume</span>
+            <span class="tag-select" onclick="toggleTag(this,'Internship')">🎓 Internship</span>
+            <span class="tag-select" onclick="toggleTag(this,'Other')">🔖 Other</span>
+          </div>
+          <button class="btn btn-p btn-sm" onclick="postDoubt()">Post doubt +1SP →</button>
+        </div>
+      </div>
+
+      <!-- Posts list -->
+      <div id="posts-list"></div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div class="dside-r">
+      <div class="dside-card">
+        <div class="dside-h">🏆 Top Contributors</div>
+        <div id="contrib-list"></div>
+      </div>
+      <div class="dside-card">
+        <div class="dside-h">🔥 Hot Topics</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div class="tpill" style="font-size:12px;border-radius:8px;cursor:none">IIT Ropar interview prep tips</div>
+          <div class="tpill" style="font-size:12px;border-radius:8px;cursor:none">Best DSA sheet for beginners</div>
+          <div class="tpill" style="font-size:12px;border-radius:8px;cursor:none">How to write a research SOP</div>
+          <div class="tpill" style="font-size:12px;border-radius:8px;cursor:none">Projects that impress reviewers</div>
+        </div>
+      </div>
+      <div class="dside-card" style="background:rgba(124,111,247,.05);border-color:rgba(124,111,247,.2)">
+        <div class="dside-h" style="color:var(--v2)">👑 Rank Ladder</div>
+        <div style="font-size:11.5px;color:var(--mu2);line-height:2">
+          <div>🌱 Rookie <span style="float:right;font-family:var(--font-m);color:var(--mu)">0 SP</span></div>
+          <div>⚙️ Solver <span style="float:right;font-family:var(--font-m);color:var(--mu)">50 SP</span></div>
+          <div>🌊 Contributor <span style="float:right;font-family:var(--font-m);color:var(--mu)">200 SP</span></div>
+          <div>🏆 Mentor <span style="float:right;font-family:var(--font-m);color:var(--mu)">500 SP</span></div>
+          <div>⚡ Yaksha Elite <span style="float:right;font-family:var(--font-m);color:var(--mu)">1000 SP</span></div>
+          <div style="color:var(--y)">👑 Campus Legend <span style="float:right;font-family:var(--font-m)">2500 SP</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ AI COMPANION ════ -->
+<div class="page" id="page-ai">
+  <nav>
+    <button class="nback" onclick="nav('home')">← Home</button>
+    <span class="nlogo" style="position:absolute;left:50%;transform:translateX(-50%)">Yaksha-mini</span>
+    <ul class="nlinks">
+      <li><button onclick="nav('faq')">FAQ</button></li>
+      <li><button onclick="nav('doubt')">Doubts</button></li>
+      <li><button class="nbtn-sign" onclick="openModal()">Sign in</button></li>
+    </ul>
+  </nav>
+  <div class="ai-layout">
+    <div class="ai-side">
+      <div class="ai-side-head">
+        <div class="orb-row">
+          <div class="orb">✦</div>
+          <div><div class="orb-name">Yaksha-mini</div><div class="orb-stat">Online · Ready</div></div>
+        </div>
+        <span class="chip chip-v" style="font-size:10px">Powered by Anthropic Claude</span>
+      </div>
+      <div class="ai-sec">
+        <div class="ai-sec-lbl">Modes</div>
+        <button class="ai-mode active" onclick="setMode('chat',this)"><span class="ai-mode-ico">💬</span>General Chat</button>
+        <button class="ai-mode" onclick="setMode('resume',this)"><span class="ai-mode-ico">📄</span>Resume Review</button>
+        <button class="ai-mode" onclick="setMode('interview',this)"><span class="ai-mode-ico">🎤</span>Interview Prep</button>
+        <button class="ai-mode" onclick="setMode('roadmap',this)"><span class="ai-mode-ico">🗺️</span>Career Roadmap</button>
+        <button class="ai-mode" onclick="setMode('internship',this)"><span class="ai-mode-ico">🎓</span>Internship Tips</button>
+      </div>
+      <div class="ai-sec">
+        <div class="ai-sec-lbl">Live Stats</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--mu2)">AI accuracy</span><span style="color:var(--t);font-family:var(--font-m);font-weight:600">97%</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--mu2)">Questions today</span><span style="color:var(--v2);font-family:var(--font-m);font-weight:600">1,240</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--mu2)">Avg response</span><span style="color:var(--y);font-family:var(--font-m);font-weight:600">1.2s</span></div>
+        </div>
+      </div>
+      <div class="ai-sec" style="flex:1">
+        <div class="ai-sec-lbl">History</div>
+        <div style="font-size:11.5px;color:var(--mu)">Sign in to save chat history and access personalized recommendations.</div>
+        <button class="btn btn-s btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="openModal()">Sign in →</button>
+      </div>
+    </div>
+    <div class="ai-chat" id="ai-chat-wrap">
+      <div class="chat-hdr">
+        <div class="orb" style="width:34px;height:34px;font-size:15px">✦</div>
+        <div><div class="chat-mode-nm" id="chat-mode-nm">General Chat</div><div class="chat-mode-sb" id="chat-mode-sb">Ask anything about Samagama, internships, career guidance</div></div>
+        <div style="margin-left:auto"><button class="btn btn-s btn-sm" onclick="clearChat()">Clear</button></div>
+      </div>
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg"><div class="msg-av">✦</div><div class="msg-bub">Namaste! I'm Yaksha-mini, your AI guide for the Samagama internship at IIT Ropar. Ask me anything about the program, your resume, career guidance, or interview prep! 🎓</div></div>
+      </div>
+      <div class="chat-bottom">
+        <div class="sugg-row" id="sugg-row">
+          <button class="sugg" onclick="useSugg(this)">📋 Eligibility criteria</button>
+          <button class="sugg" onclick="useSugg(this)">💰 Stipend details</button>
+          <button class="sugg" onclick="useSugg(this)">📄 Resume tips for Samagama</button>
+          <button class="sugg" onclick="useSugg(this)">🎤 Mock interview questions</button>
+          <button class="sugg" onclick="useSugg(this)">🗺️ Suggest a learning roadmap</button>
+        </div>
+        <div class="chat-inp-row">
+          <textarea class="chat-inp" id="ai-inp" rows="1" placeholder="Ask Yaksha anything..."></textarea>
+          <button class="chat-send" onclick="sendAI()">→</button>
+        </div>
+      </div>
+    </div>
+    <!-- Panel view for non-chat modes -->
+    <div id="panel-view" style="display:none;overflow-y:auto">
+      <div class="ai-panel"><div id="panel-content"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CURSOR ── */
+const CU=document.getElementById('CU'),CR=document.getElementById('CR');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;CU.style.left=mx-5+'px';CU.style.top=my-5+'px'});
+(function ar(){rx+=(mx-rx-16)*.12;ry+=(my-ry-16)*.12;CR.style.left=rx+'px';CR.style.top=ry+'px';requestAnimationFrame(ar)})();
+document.querySelectorAll('a,button,.feat-card,.faq-item,.rpost,.tpill,.scat,.kw,.ai-mode,.sugg,.dcat,.tag-select').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{CU.style.transform='scale(2)';CR.style.width=CR.style.height='48px'});
+  el.addEventListener('mouseleave',()=>{CU.style.transform='scale(1)';CR.style.width=CR.style.height='32px'});
+});
+
+/* ── PARTICLES ── */
+const cv=document.getElementById('bgc'),cx=cv.getContext('2d');
+let pts=[];
+function rsz(){cv.width=innerWidth;cv.height=innerHeight}
+function init(){pts=[];for(let i=0;i<80;i++)pts.push({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.1,o:Math.random(),s:(.002+Math.random()*.003)*(Math.random()<.5?1:-1)})}
+function draw(){cx.clearRect(0,0,cv.width,cv.height);pts.forEach(p=>{p.o+=p.s;if(p.o>1||p.o<0)p.s*=-1;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fillStyle=`rgba(255,255,255,${p.o*.4})`;cx.fill()});requestAnimationFrame(draw)}
+rsz();init();draw();window.addEventListener('resize',()=>{rsz();init()});
+
+/* ── COUNTERS ── */
+function animCnt(el,t){let s=0,pr=null;const dur=1800;function step(ts){if(!pr)pr=ts;s+=ts-pr;pr=ts;const e=1-Math.pow(1-Math.min(s/dur,1),3);el.textContent=Math.floor(e*t).toLocaleString();if(s<dur)requestAnimationFrame(step)}requestAnimationFrame(step)}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.cnt').forEach(c=>animCnt(c,+c.dataset.t));io.unobserve(e.target)}}),{threshold:.3});
+document.querySelectorAll('.stats-bar').forEach(el=>io.observe(el));
+
+/* ── ROUTING ── */
+const pages={home:'page-home',faq:'page-faq',doubt:'page-doubt',ai:'page-ai'};
+let cur='home';
+let signedInRole='intern';
+let signedInUser='You';
+function nav(to){
+  if(to===cur)return;
+  const from=document.getElementById(pages[cur]);
+  const dest=document.getElementById(pages[to]);
+  from.classList.add('exit');
+  setTimeout(()=>{
+    from.classList.remove('active','exit');
+    dest.classList.add('active');
+    dest.scrollTop=0;
+    cur=to;
+    if(to==='faq'){renderFAQ(faqData)}
+    if(to==='doubt'){renderPosts();renderContribs()}
+    if(to==='ai'){chatHistory=[];resetChat()}
+  },320);
+}
+
+/* ── SIGN IN MODAL ── */
+let selRole='intern';
+function openModal(){document.getElementById('sign-modal').classList.add('open')}
+function closeModal(){document.getElementById('sign-modal').classList.remove('open')}
+function setRole(r){
+  selRole=r;
+  document.getElementById('tab-intern').classList.toggle('active',r==='intern');
+  document.getElementById('tab-admin').classList.toggle('active',r==='admin');
+  document.getElementById('role-note').innerHTML=`Signing in as: <strong style="color:var(--v2)">${r==='intern'?'Student / Intern':'Admin / Faculty'}</strong>`;
+}
+function signIn(){
+  signedInRole=selRole;
+  signedInUser=selRole==='admin'?'Admin':'You';
+  alert(`Demo: Signed in as ${signedInUser} (${signedInRole === 'admin' ? 'Admin' : 'Intern'}).`);
+  closeModal();
+  renderPosts();
+}
+document.getElementById('sign-modal').addEventListener('click',e=>{if(e.target===document.getElementById('sign-modal'))closeModal()});
+
+/* ── FAQ DATA ── */
+const faqData=[
+  {q:"Is the NOC (No Objection Certificate) mandatory?",a:"Yes, the NOC from your college/university is required before the internship begins. It's a standard requirement and most colleges issue it routinely once you show the offer letter. You don't need it at the application stage.",cat:"docs",tag:"Documents"},
+  {q:"What is the stipend for this internship?",a:"The stipend is performance-based and varies by role and project complexity. On-site interns generally receive a higher stipend than remote participants. Exact figures are shared in the offer letter.",cat:"stipend",tag:"Stipend"},
+  {q:"What year of study must I be in to apply?",a:"The program is open to students in their 2nd, 3rd, or pre-final year of undergraduate study. Final-year students may apply but priority is given to those who have at least one semester remaining.",cat:"eligibility",tag:"Eligibility"},
+  {q:"How long does the internship last?",a:"The duration ranges from 2 to 6 months depending on the project. Most students join for a full semester (~5–6 months) or the summer (2 months).",cat:"timeline",tag:"Timeline"},
+  {q:"Can I do this internship remotely?",a:"Yes, remote participation is available for most projects. However, some research-heavy roles may require on-site presence at IIT Ropar. This will be specified in your offer letter.",cat:"remote",tag:"Remote"},
+  {q:"What documents do I need to apply?",a:"You need: (1) Updated resume/CV, (2) Statement of Purpose — 300–500 words, (3) Links to your projects or GitHub, (4) Latest marksheet. NOC is required only after selection.",cat:"docs",tag:"Documents"},
+  {q:"Is there a CGPA cutoff for applying?",a:"No hard CGPA cutoff. The team values quality of thinking, projects, and clarity over raw academic scores.",cat:"eligibility",tag:"Eligibility"},
+  {q:"How long does it take to hear back after applying?",a:"Shortlisting results are communicated within 2–3 weeks of the application deadline. Full process from application to offer takes 4–6 weeks.",cat:"process",tag:"Process"},
+  {q:"Will I get a certificate at the end?",a:"Yes. All interns who successfully complete the program receive an official certificate issued by IIT Ropar, signed by the faculty supervisor.",cat:"certificate",tag:"Certificate"},
+  {q:"Is there any application fee?",a:"No. The application to Samagama is completely free. The only official portal is samagama.in.",cat:"fee",tag:"Fees"}
+];
+
+const faqCategories=[
+  {key:'eligibility',label:'Eligibility'},
+  {key:'process',label:'Process'},
+  {key:'stipend',label:'Stipend'},
+  {key:'docs',label:'Documents'},
+  {key:'timeline',label:'Timeline'},
+  {key:'certificate',label:'Certificate'},
+  {key:'remote',label:'Remote'},
+  {key:'fee',label:'Fees'}
+];
+let faqCat='all',faqQ='';
+function renderFAQ(d){
+  const el=document.getElementById('faq-list-main');if(!el)return;
+  const groups=faqCategories.map(cat=>({key:cat.key,label:cat.label,items:d.filter(f=>f.cat===cat.key)})).filter(g=>g.items.length>0);
+  if(groups.length===0){
+    el.innerHTML='<div style="padding:30px 18px;border:1px solid var(--bd);border-radius:var(--rad2);color:var(--mu2);font-size:14px;text-align:center">No FAQ entries match your search yet. Try another keyword or ask Yaksha-mini.</div>';
+    return;
+  }
+  el.innerHTML=groups.map((group,gi)=>`
+    <div class="faq-cat-section${gi===0?' open':''}" id="faq-group-${group.key}">
+      <button class="faq-cat-header" onclick="toggleCategory('${group.key}')">
+        <div class="faq-cat-title"><span>${group.label}</span><span class="faq-cat-count">${group.items.length} question${group.items.length>1?'s':''}</span></div>
+        <span class="faq-chev">▼</span>
+      </button>
+      <div class="faq-cat-body" id="faq-body-${group.key}">
+        ${group.items.map((f,i)=>`<div class="faq-item" id="fi-${group.key}-${i}"><div class="faq-q" onclick="toggleF('${group.key}-${i}')"><span class="faq-qt">${f.q}</span><div style="display:flex;align-items:center;gap:8px"><span class="chip chip-v" style="font-size:10px">${f.tag}</span><span class="faq-chev">▼</span></div></div><div class="faq-ans"><div class="faq-ans-in">${f.a}</div></div></div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+function toggleCategory(key){const section=document.getElementById('faq-group-'+key);if(!section)return;section.classList.toggle('open');}
+function toggleF(id){const el=document.getElementById('fi-'+id);if(!el)return;const o=el.classList.contains('open');document.querySelectorAll('.faq-item').forEach(x=>x.classList.remove('open'));if(!o)el.classList.add('open')}
+function filterFAQ(q){faqQ=q.toLowerCase();applyF()}
+function catFAQ(btn,cat){document.querySelectorAll('.kw').forEach(b=>b.classList.remove('active'));btn.classList.add('active');faqCat=cat;document.getElementById('faq-cat-select').value=cat;applyF();
+  document.querySelectorAll('.scat').forEach(b=>{b.classList.toggle('active',b.dataset.c===cat)})}
+function catFAQSide(btn,cat){document.querySelectorAll('.scat').forEach(b=>b.classList.remove('active'));btn.classList.add('active');faqCat=cat;document.getElementById('faq-cat-select').value=cat;applyF();
+  document.querySelectorAll('.kw').forEach(b=>{b.classList.toggle('active',b.dataset.c===cat)})}
+function catFAQSelect(cat){faqCat=cat;applyF();document.querySelectorAll('.kw').forEach(b=>b.classList.toggle('active',b.dataset.c===cat));document.querySelectorAll('.scat').forEach(b=>b.classList.toggle('active',b.dataset.c===cat));}
+function applyF(){let d=faqData;if(faqCat!=='all')d=d.filter(f=>f.cat===faqCat);if(faqQ)d=d.filter(f=>f.q.toLowerCase().includes(faqQ)||f.a.toLowerCase().includes(faqQ));renderFAQ(d)}
+
+/* ── DOUBT DATA ── */
+const initPosts=[
+  {id:1,title:"How to write a strong SOP for IIT Ropar Samagama?",body:"I'm applying for the research internship and not sure what to focus on in my SOP. Should I talk about past projects or future goals? Any templates or examples would help a lot.",tags:["Internship","Resume"],votes:47,solved:true,user:"Priya R.",userColor:"linear-gradient(135deg,#a78bfa,#7c6ff7)",userInit:"PR",time:"2h ago",sp:10,status:"approved",answers:[{user:"Arjun K.",userColor:"#fbbf24",text:"Focus on why IIT Ropar specifically, your relevant projects, and how this aligns with your long-term goal. Keep it under 500 words and make every sentence purposeful.",sp:"+7 SP",time:"1h ago"}]},
+  {id:2,title:"Best DSA resources to prepare for research internship interviews?",body:"I know basic data structures but want to brush up before the Samagama selection process. Which resources should I follow? Does Samagama even ask DSA?",tags:["DSA","Coding"],votes:31,solved:false,user:"Arjun K.",userColor:"linear-gradient(135deg,#fbbf24,#f59e0b)",userInit:"AK",time:"5h ago",sp:1,status:"approved",answers:[]},
+  {id:3,title:"Can I apply for Samagama if I'm from a tier-3 college?",body:"I'm in my 3rd year at a state university. Worried that IIT students get priority. The website doesn't mention college tier — is there bias in shortlisting?",tags:["Eligibility","Internship"],votes:28,solved:true,user:"Meera S.",userColor:"linear-gradient(135deg,#34d399,#00c9a7)",userInit:"MS",time:"8h ago",sp:10,status:"approved",answers:[{user:"Vikas T.",userColor:"#f87171",text:"No official bias. I'm from a state college and got selected. Strong projects and a clear SOP matter much more than college name.",sp:"+10 SP",time:"7h ago"}]},
+  {id:4,title:"What kind of projects impress Samagama reviewers?",body:"Do they prefer AI/ML projects or is any CS domain fine? I mostly have web dev projects. Will that put me at a disadvantage?",tags:["Projects"],votes:22,solved:false,user:"Rohan T.",userColor:"linear-gradient(135deg,#c4b5fd,#a78bfa)",userInit:"RT",time:"1d ago",sp:1,status:"approved",answers:[]},
+];
+
+let postList=JSON.parse(JSON.stringify(initPosts));
+let selectedTags=[];
+
+function toggleTag(el,tag){el.classList.toggle('sel');if(selectedTags.includes(tag))selectedTags=selectedTags.filter(t=>t!==tag);else selectedTags.push(tag)}
+
+function postDoubt(){
+  const title=document.getElementById('doubt-title').value.trim();
+  const body=document.getElementById('doubt-body').value.trim();
+  if(!title)return;
+  postList.unshift({
+    id:Date.now(),
+    title,
+    body:body||'',
+    tags:selectedTags.length?[...selectedTags]:['Other'],
+    votes:1,
+    solved:false,
+    user:signedInUser,
+    userColor:'linear-gradient(135deg,var(--v),var(--t))',
+    userInit:'Y',
+    time:'just now',
+    sp:0,
+    status:'pending',
+    answers:[]
+  });
+  document.getElementById('doubt-title').value='';
+  document.getElementById('doubt-body').value='';
+  selectedTags=[];
+  document.querySelectorAll('.tag-select').forEach(t=>t.classList.remove('sel'));
+  renderPosts();
+}
+
+function renderPosts(){
+  const pl=document.getElementById('posts-list');if(!pl)return;
+  pl.innerHTML=postList.map(p=>renderPost(p)).join('');
+}
+
+function renderPost(p){
+  const tagChips=p.tags.map(t=>`<span class="chip chip-mu" style="font-size:10px">${t}</span>`).join('');
+  const answers=p.answers.map(a=>`
+    <div class="comment">
+      <div class="comment-av" style="background:${a.userColor||'var(--gl3)'};color:#fff">${a.user.split(' ').map(x=>x[0]).join('')}</div>
+      <div class="comment-content">
+        <div class="comment-user">${a.user} <span class="sp-earned">${a.sp}</span> <span style="color:var(--mu);font-size:10px">${a.time}</span></div>
+        <div class="comment-text">${a.text}</div>
+      </div>
+    </div>`).join('');
+  const statusLabel = p.status==='pending' ? `<span class="chip chip-mu" style="font-size:10px;background:rgba(251,191,36,.11);color:var(--y);border-color:rgba(251,191,36,.2)">Pending approval</span>` : p.status==='rejected' ? `<span class="chip chip-r" style="font-size:10px">Rejected</span>` : '';
+  const adminControls = p.status==='pending' && signedInRole==='admin' ? `<button class="ract-btn" onclick="approvePost(${p.id})">✔ Approve</button><button class="ract-btn" onclick="rejectPost(${p.id})">✕ Reject</button>` : '';
+  const answerCount = p.answers.length;
+  return `
+  <div class="rpost" id="rp-${p.id}">
+    <div class="rpost-main">
+      <div class="vcol">
+        <button class="vbtn" onclick="vote(${p.id},1)">▲</button>
+        <span class="vcnt" id="vc-${p.id}">${p.votes}</span>
+        <button class="vbtn" onclick="vote(${p.id},-1)">▼</button>
+      </div>
+      <div class="rpost-body">
+        <div class="rpost-meta">
+          <div style="width:22px;height:22px;border-radius:50%;background:${p.userColor};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;font-family:var(--font-d);flex-shrink:0">${p.userInit}</div>
+          <span class="rpost-user">${p.user}</span>
+          <span class="rpost-time">${p.time}</span>
+          ${statusLabel}
+          ${p.sp>0?`<span class="sp-earned">+${p.sp} SP</span>`:''}
+          ${p.solved?`<span class="solved-badge">✓ Solved</span>`:''}
+        </div>
+        <div class="rpost-h">${p.title}</div>
+        ${p.body?`<div class="rpost-excerpt">${p.body}</div>`:''}
+        <div class="rpost-tags">${tagChips}</div>
+        <div class="rpost-actions">
+          <button class="ract-btn" onclick="toggleAnswers(${p.id})">💬 ${answerCount} Answers</button>
+          <button class="ract-btn">🔗 Share</button>
+          ${!p.solved && p.status==='approved'?`<button class="ract-btn" onclick="markSolved(${p.id})">✓ Mark solved</button>`:''}
+          ${adminControls}
+        </div>
+      </div>
+    </div>
+    <div class="comments-section" id="cmt-${p.id}" style="display:block">
+      ${answers}
+      ${p.status==='approved' ? `<div class="comment-input-row" style="margin-top:${answerCount>0?'12px':'0'}">
+        <div class="user-av" style="width:26px;height:26px;font-size:11px;flex-shrink:0">Y</div>
+        <textarea class="comment-inp" id="ci-${p.id}" rows="1" placeholder="Write an answer... help your peer and earn SP"></textarea>
+        <button class="comment-submit" onclick="submitAnswer(${p.id})">Answer +SP</button>
+      </div>` : p.status==='pending' ? `<div style="margin-top:12px;padding:14px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.18);border-radius:var(--rad2);font-size:13px;color:var(--mu2)">This doubt is pending admin approval. It will appear to the community once approved.</div>` : `<div style="margin-top:12px;padding:14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:var(--rad2);font-size:13px;color:var(--mu2)">This doubt was rejected by admin and is not visible to the community.</div>`}
+    </div>
+  </div>`;
+}
+
+function toggleAnswers(id){
+  const el=document.getElementById('cmt-'+id);
+  if(el)el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+function vote(id,dir){
+  const p=postList.find(x=>x.id===id);if(!p)return;
+  p.votes+=dir;
+  const el=document.getElementById('vc-'+id);if(el)el.textContent=p.votes;
+}
+
+function markSolved(id){
+  const p=postList.find(x=>x.id===id);if(!p)return;
+  p.solved=true;p.sp=10;
+  renderPosts();
+}
+
+function submitAnswer(id){
+  const inp=document.getElementById('ci-'+id);if(!inp)return;
+  const txt=inp.value.trim();if(!txt)return;
+  const p=postList.find(x=>x.id===id);if(!p||p.status!=='approved')return;
+  p.answers.push({user:'You',userColor:'var(--v)',text:txt,sp:'+5 SP',time:'just now'});
+  inp.value='';
+  renderPosts();
+}
+
+function approvePost(id){
+  const p=postList.find(x=>x.id===id);if(!p)return;
+  p.status='approved';
+  p.sp=1;
+  renderPosts();
+}
+
+function rejectPost(id){
+  const p=postList.find(x=>x.id===id);if(!p)return;
+  p.status='rejected';
+  renderPosts();
+}
+
+const contribData=[
+  {i:"AK",c:"linear-gradient(135deg,#ffd166,#e09a00)",tc:"#4a2c00",n:"Arjun Kapoor",pts:"3,241 SP",b:"👑"},
+  {i:"PR",c:"linear-gradient(135deg,#b0bec5,#607d8b)",tc:"#fff",n:"Priya Rao",pts:"1,987 SP",b:"⚡"},
+  {i:"SK",c:"linear-gradient(135deg,#c87941,#8d4a1d)",tc:"#fff",n:"Siddharth K.",pts:"1,124 SP",b:"🔥"},
+  {i:"AM",c:"rgba(124,111,247,.3)",tc:"#a78bfa",n:"Ananya M.",pts:"876 SP",b:"🌊"},
+  {i:"VN",c:"rgba(0,201,167,.2)",tc:"#00c9a7",n:"Vikram N.",pts:"643 SP",b:"⚙️"},
+];
+
+function renderContribs(){
+  const el=document.getElementById('contrib-list');if(!el)return;
+  el.innerHTML=contribData.map((c,i)=>`
+    <div class="contrib-row">
+      <span style="font-family:var(--font-d);font-size:13px;font-weight:800;width:18px;color:${i===0?'var(--y)':i===1?'#b0bec5':i===2?'#c87941':'var(--mu)'}">${i+1}</span>
+      <div class="c-av" style="background:${c.c};color:${c.tc}">${c.i}</div>
+      <div class="c-name">${c.n} <span style="font-size:12px">${c.b}</span></div>
+      <span class="c-pts">${c.pts}</span>
+    </div>`).join('');
+}
+
+/* ── AI COMPANION ── */
+let chatHistory=[];
+const SYS=`You are Yaksha-mini, the AI assistant for Samagama — a research internship program by Vicharanashala at IIT Ropar. Only answer questions about: Samagama program specifics (process, eligibility, stipend, documents, timeline, NOC, certificates), resume/SOP guidance for this program, interview prep for research internships, career roadmap advice for CS/engineering students, and DSA/CS learning guidance for internship prep. Key facts: 2-6 month duration, performance-based stipend, IIT Ropar certificate, no CGPA cutoff, no application fee (only samagama.in), NOC needed only after selection, remote available for most roles, open to 2nd/3rd/pre-final year undergrads. Keep responses concise, warm, and practical. Use light emoji naturally.`;
+
+const modeCfg={
+  chat:{nm:'General Chat',sb:'Ask anything about Samagama, internships, career guidance'},
+  resume:{nm:'Resume Review',sb:'Get AI feedback on your resume and SOP'},
+  interview:{nm:'Interview Prep',sb:'Practice with AI-generated interview questions'},
+  roadmap:{nm:'Career Roadmap',sb:'Personalized learning path and career guidance'},
+  internship:{nm:'Internship Tips',sb:'Recommendations and tips for landing internships'}
+};
+
+const panelHTML={
+  resume:`<div class="ai-pgrid">
+    <div class="ai-pc"><div class="ai-pc-ico">📄</div><div class="ai-pc-h">ATS Score Check</div><div class="ai-pc-p">Paste your resume text for instant ATS compatibility scoring with actionable improvements.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">🔥</div><div class="ai-pc-h">Roast My Resume</div><div class="ai-pc-p">Brutally honest AI feedback — no sugarcoating, only actionable improvements.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">✏️</div><div class="ai-pc-h">SOP Generator</div><div class="ai-pc-p">Answer a few questions and get a personalized Statement of Purpose for Samagama.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">🎯</div><div class="ai-pc-h">Skills Gap Analysis</div><div class="ai-pc-p">See what's missing from your profile vs. successful Samagama applicants.</div></div>
+  </div>
+  <div style="margin-top:16px;padding:18px;background:rgba(124,111,247,.06);border:1px solid rgba(124,111,247,.2);border-radius:var(--rad2)">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px">💬 Or chat directly about your resume</div>
+    <button class="btn btn-p btn-sm" onclick="switchToChat('Roast my resume — I want brutally honest AI feedback')">Open Resume Chat →</button>
+  </div>`,
+  interview:`<div class="ai-pgrid">
+    <div class="ai-pc"><div class="ai-pc-ico">🎤</div><div class="ai-pc-h">Mock Interview</div><div class="ai-pc-p">Simulate a full Samagama interview with real-time AI feedback after each answer.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">🧠</div><div class="ai-pc-h">Question Bank</div><div class="ai-pc-p">100+ curated questions specific to Samagama and IIT Ropar research internships.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">💡</div><div class="ai-pc-h">Answer Coach</div><div class="ai-pc-p">Practice answers and get STAR-method feedback from AI.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">📊</div><div class="ai-pc-h">Performance Tracker</div><div class="ai-pc-p">Track mock scores over time and see which areas need work.</div></div>
+  </div>
+  <div style="margin-top:16px;padding:18px;background:rgba(0,201,167,.05);border:1px solid rgba(0,201,167,.2);border-radius:var(--rad2)">
+    <div style="font-size:13px;font-weight:600;margin-bottom:6px">🎯 Start a mock interview now</div>
+    <button class="btn btn-p btn-sm" onclick="switchToChat('Start a mock interview for the Samagama internship — ask me questions one at a time and give feedback after each answer')">Start Mock →</button>
+  </div>`,
+  roadmap:`<div style="padding:4px 0">
+    ${[{s:'01',t:'Core CS Foundations',d:'4–6 weeks',it:'DSA, System Design basics, Git workflow',c:'var(--v)'},
+       {s:'02',t:'Research Skills',d:'3–4 weeks',it:'Paper reading, LaTeX, literature review, experiment design',c:'var(--t)'},
+       {s:'03',t:'Domain Specialization',d:'6–8 weeks',it:'Pick AI/ML, Web, Systems — go deep in one',c:'var(--y)'},
+       {s:'04',t:'Portfolio Building',d:'Ongoing',it:'2–3 strong projects, GitHub profile, technical writing',c:'var(--r)'},
+       {s:'05',t:'Application Prep',d:'2 weeks',it:'SOP writing, resume polish, mock interviews',c:'var(--v2)'}
+    ].map(r=>`<div style="display:flex;gap:14px;margin-bottom:14px;padding:16px;background:var(--gl);border:1px solid var(--bd);border-radius:var(--rad2)">
+      <div style="font-family:var(--font-d);font-size:26px;font-weight:800;color:${r.c};opacity:.35;flex-shrink:0;line-height:1">${r.s}</div>
+      <div><div style="font-family:var(--font-d);font-size:14px;font-weight:700;margin-bottom:3px">${r.t}</div>
+      <div style="font-size:11px;font-family:var(--font-m);color:${r.c};margin-bottom:5px">${r.d}</div>
+      <div style="font-size:12.5px;color:var(--mu2)">${r.it}</div></div></div>`).join('')}
+  </div>`,
+  internship:`<div class="ai-pgrid">
+    <div class="ai-pc"><div class="ai-pc-ico">🎯</div><div class="ai-pc-h">Samagama Fit Score</div><div class="ai-pc-p">Answer 5 quick questions and see how strong your profile is for this program.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">📋</div><div class="ai-pc-h">Application Checklist</div><div class="ai-pc-p">Complete checklist of everything you need before clicking submit.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">🌐</div><div class="ai-pc-h">Similar Programs</div><div class="ai-pc-p">AI-curated list of research internships at IITs and top institutions.</div></div>
+    <div class="ai-pc"><div class="ai-pc-ico">📅</div><div class="ai-pc-h">Deadline Tracker</div><div class="ai-pc-p">Never miss an application deadline for research internship openings.</div></div>
+  </div>`
+};
+
+function setMode(mode,btn){
+  document.querySelectorAll('.ai-mode').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const cfg=modeCfg[mode];
+  document.getElementById('chat-mode-nm').textContent=cfg.nm;
+  document.getElementById('chat-mode-sb').textContent=cfg.sb;
+  const cv=document.getElementById('ai-chat-wrap').querySelector('.chat-msgs').parentElement.parentElement;
+  if(mode==='chat'){
+    document.getElementById('chat-msgs').parentElement.style.display='flex';
+    document.getElementById('panel-view').style.display='none';
+    document.getElementById('ai-chat-wrap').style.display='flex';
+  } else {
+    document.getElementById('ai-chat-wrap').querySelector('#chat-msgs').parentElement.style.display='none';
+    document.getElementById('panel-view').style.display='block';
+    document.getElementById('panel-content').innerHTML=panelHTML[mode]||'';
+  }
+}
+
+function switchToChat(msg){
+  const chatBtn=document.getElementById('mode-chat')||document.querySelector('.ai-mode');
+  setMode('chat',document.querySelector('.ai-mode'));
+  document.querySelectorAll('.ai-mode').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.ai-mode').classList.add('active');
+  document.getElementById('ai-inp').value=msg;
+  sendAI();
+}
+
+async function sendAI(){
+  const inp=document.getElementById('ai-inp');
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value='';
+  appendMsg('user',msg);
+  chatHistory.push({role:'user',content:msg});
+  const t=appendTyping();
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYS,messages:chatHistory})});
+    const data=await res.json();
+    const reply=data.content?.[0]?.text||"I couldn't get a response right now. Try again!";
+    t.remove();appendMsg('ai',reply);
+    chatHistory.push({role:'assistant',content:reply});
+  }catch(e){t.remove();appendMsg('ai',"Offline right now — try refreshing! 🔄")}
+}
+
+function appendMsg(role,text){
+  const c=document.getElementById('chat-msgs');
+  const d=document.createElement('div');
+  d.className='msg'+(role==='user'?' user':'');
+  d.innerHTML=`<div class="msg-av">${role==='ai'?'✦':'👤'}</div><div class="msg-bub">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;return d;
+}
+function appendTyping(){
+  const c=document.getElementById('chat-msgs'),d=document.createElement('div');
+  d.className='msg';d.innerHTML=`<div class="msg-av">✦</div><div class="msg-bub"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;return d;
+}
+function useSugg(btn){document.getElementById('ai-inp').value=btn.textContent.replace(/^[^\w]+/,'').trim();sendAI()}
+function clearChat(){chatHistory=[];resetChat()}
+function resetChat(){document.getElementById('chat-msgs').innerHTML=`<div class="msg"><div class="msg-av">✦</div><div class="msg-bub">Chat cleared! Ask me anything about Samagama. 🎓</div></div>`}
+document.getElementById('ai-inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAI()}});
+</script>
+</body>
+</html>

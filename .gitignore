@@ -1,19 +1,9 @@
-# Personal agent files
-HEARTBEAT.md
-IDENTITY.md
-SOUL.md
-TOOLS.md
-USER.md
-AGENTS.md
-memory/
-.openclaw/
-
-# Other projects
-asme-landing/
-video-player/
-iDoubt-Solver.html
-
-# OS
+node_modules
+dist
+.env
 .DS_Store
-*.swp
-*.swo
+.env
+server/.env
+*_REPORT.md
+server/uploads/
+.claude/settings.local.json
