@@ -342,3 +342,4 @@ function App() {
 }
 
 export default App;
+// End of App component

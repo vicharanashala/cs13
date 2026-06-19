@@ -176,4 +176,5 @@ async function start() {
   });
 }
 
+// Initiating the server start process
 start();

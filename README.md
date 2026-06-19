@@ -1,4 +1,5 @@
 # Samagama — Internship Management Platform
+<!-- Project documentation -->
 
 > **IIT Ropar · Vicharanashala · Full-Stack MERN Web Application**
 
