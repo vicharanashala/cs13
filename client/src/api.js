@@ -492,3 +492,4 @@ export async function awardSpurti(studentId, amount, reason) {
   });
   return res.json();
 }
+// API helper functions end here

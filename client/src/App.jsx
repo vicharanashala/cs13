@@ -122,6 +122,7 @@ function ProtectedRoute({ children, role }) {
   return children;
 }
 
+// The core App component definition
 function App() {
   const { user, setUser, authLoaded, bootError } = useAuthBootstrap();
   const navigate = useNavigate();
