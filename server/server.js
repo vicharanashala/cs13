@@ -1,3 +1,4 @@
+// Main server configuration file
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -176,4 +177,5 @@ async function start() {
   });
 }
 
+// Initiating the server start process
 start();

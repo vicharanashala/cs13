@@ -1,4 +1,5 @@
 # Samagama — Internship Management Platform
+<!-- Project documentation -->
 
 > **IIT Ropar · Vicharanashala · Full-Stack MERN Web Application**
 
@@ -254,3 +255,5 @@ All endpoints are served from `http://localhost:4000/api`.
 
 > Built by **CS13** for the Vicharanashala internship programme at IIT Ropar.  
 > Stack: React · Vite · Express · MongoDB · Groq AI
+
+<!-- End of documentation -->
