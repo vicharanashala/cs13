@@ -3,7 +3,7 @@
 
 > **IIT Ropar · Vicharanashala · Full-Stack MERN Web Application**
 
-Samagama is the official internship dashboard for the Vicharanashala open-source internship programme at IIT Ropar. It connects students to a structured two-month journey covering training phases, team projects, community Q&A, AI assistance, and a gamified points system — all in one place.
+Samagama is the official internship dashboard for the Vicharanashala open-source internship programme at IIT Ropar. It connects the students to a structured two-month journey covering training phases, team projects, community Q&A, AI assistance, and a gamified points system — all in one place.
 
 ---
 
