@@ -1591,7 +1591,8 @@ function StudentDashboard() {
   const [pendingReadAnnouncementId, setPendingReadAnnouncementId] = useState(null);
   const [announcementSort, setAnnouncementSort] = useState('latest');
   const [announcementAudienceFilter, setAnnouncementAudienceFilter] = useState('all');
-  const [taskOverview, setTaskOverview] = useState({ total: 0, pending: 0, completed: 0, missed: 0, inProgress: 0 });
+  const [tasks, setTasks] = useState(() => getInternshipTasks());
+  const [taskOverview, setTaskOverview] = useState(() => getTaskSummary(getInternshipTasks()));
   const [announcementsLoaded, setAnnouncementsLoaded] = useState(false);
   const [journeyTick, setJourneyTick] = useState(0);
   const loginTimestampRef = useRef(new Date());
@@ -1652,6 +1653,85 @@ function StudentDashboard() {
     () => studentAnnouncements.filter(item => !readAnnouncementIds.includes(item.id)).length,
     [studentAnnouncements, readAnnouncementIds],
   );
+  const focusPlan = useMemo(() => {
+    const planItems = [];
+    const now = new Date();
+
+    tasks.forEach(task => {
+      const status = getTaskStatus(task, now);
+      if (status === 'completed') return;
+
+      const deadlineInfo = getTaskDeadlineInfo(task, now);
+      const isMissed = status === 'missed' || Number(deadlineInfo.daysRemaining) < 0;
+      const isDueSoon = Number(deadlineInfo.daysRemaining) <= 2;
+      if (!isMissed && !isDueSoon && task.priority !== 'High') return;
+
+      planItems.push({
+        id: `task-${task.id || task._id}`,
+        type: 'Task',
+        title: task.title,
+        detail: isMissed ? deadlineInfo.label : `${deadlineInfo.label} - ${task.category || 'General'}`,
+        urgency: isMissed ? 'critical' : Number(deadlineInfo.daysRemaining) === 0 ? 'high' : task.priority === 'High' ? 'medium' : 'normal',
+        actionLabel: 'Open tasks',
+        route: '/student/tasks',
+        sort: isMissed ? 0 : Number(deadlineInfo.daysRemaining ?? 7) + 1,
+      });
+    });
+
+    const activeMilestone = getJourneyMilestones().find(item => item.status === 'active' || item.status === 'pending_review');
+    if (activeMilestone) {
+      const deadlineInfo = getTaskDeadlineInfo(activeMilestone, now);
+      const waiting = activeMilestone.status === 'pending_review';
+      planItems.push({
+        id: `journey-${activeMilestone.id}`,
+        type: waiting ? 'Review' : 'Journey',
+        title: activeMilestone.title,
+        detail: waiting ? 'Submitted and waiting for admin review' : `${deadlineInfo.label} - ${activeMilestone.desc}`,
+        urgency: waiting ? 'normal' : Number(deadlineInfo.daysRemaining) <= 1 ? 'high' : 'medium',
+        actionLabel: waiting ? 'View status' : 'Continue',
+        route: activeMilestone.relatedRoute || '/student/tasks',
+        sort: waiting ? 5 : 2,
+      });
+    }
+
+    studentAnnouncements
+      .filter(item => !readAnnouncementIds.includes(item.id))
+      .slice(0, 4)
+      .forEach((announcement, index) => {
+        const deadlineInfo = getAnnouncementDeadlineInfo(announcement);
+        const urgent = ['Critical', 'High'].includes(announcement.urgencyLevel || announcement.priority);
+        if (!urgent && !announcement.pinned && index > 1) return;
+
+        planItems.push({
+          id: `announcement-${announcement.id}`,
+          type: 'Announcement',
+          title: announcement.title,
+          detail: deadlineInfo.label || announcement.preview || 'Unread update',
+          urgency: urgent ? 'high' : 'normal',
+          actionLabel: 'Read update',
+          announcement,
+          sort: urgent ? 1 : 6 + index,
+        });
+      });
+
+    const pendingReviewCount = Array.isArray(journeyState.pendingReviews) ? journeyState.pendingReviews.length : Number(journeyState.pendingReviews || 0);
+    if (pendingReviewCount > 0) {
+      planItems.push({
+        id: 'pending-reviews',
+        type: 'Review',
+        title: `${pendingReviewCount} submission${pendingReviewCount === 1 ? '' : 's'} in review`,
+        detail: 'Keep an eye on mentor feedback and requested changes.',
+        urgency: 'normal',
+        actionLabel: 'View journey',
+        route: '/student/tasks',
+        sort: 7,
+      });
+    }
+
+    return planItems
+      .sort((a, b) => a.sort - b.sort)
+      .slice(0, 4);
+  }, [tasks, studentAnnouncements, readAnnouncementIds, journeyState, journeyTick]);
 
   useEffect(() => {
     function handleDocumentClick(event) {
@@ -1681,10 +1761,14 @@ function StudentDashboard() {
     async function syncTasks() {
       try {
         const data = await fetchMyTasks();
-        const fresh = Array.isArray(data) ? data : [];
+        const fresh = Array.isArray(data) && data.length > 0 ? data : getInternshipTasks();
         setTasks(fresh);
         setTaskOverview(getTaskSummary(fresh));
-      } catch { /* ignore */ }
+      } catch {
+        const fallbackTasks = getInternshipTasks();
+        setTasks(fallbackTasks);
+        setTaskOverview(getTaskSummary(fallbackTasks));
+      }
     }
 
     function syncJourney() {
@@ -1709,6 +1793,7 @@ function StudentDashboard() {
     window.addEventListener('storage', syncTasks);
     window.addEventListener('storage', syncJourney);
     syncReadState();
+    syncTasks();
     return () => {
       document.removeEventListener('mousedown', handleDocumentClick);
       window.removeEventListener('samagama-announcements-updated', syncAnnouncements);
@@ -2037,6 +2122,46 @@ function StudentDashboard() {
           </section>
         </section>
 
+        <section style={focusPlanStyles.shell}>
+          <div style={focusPlanStyles.header}>
+            <div>
+              <span style={focusPlanStyles.eyebrow}>Daily Focus</span>
+              <h2 style={focusPlanStyles.title}>Next best actions</h2>
+            </div>
+            <div style={focusPlanStyles.count}>{focusPlan.length || 'All clear'}</div>
+          </div>
+
+          {focusPlan.length === 0 ? (
+            <div style={focusPlanStyles.empty}>
+              You are caught up for now. Check announcements later or use Zoro if you want guidance.
+            </div>
+          ) : (
+            <div style={focusPlanStyles.list}>
+              {focusPlan.map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => (item.announcement ? openAnnouncement(item.announcement) : navigate(item.route))}
+                  style={{
+                    ...focusPlanStyles.item,
+                    ...(item.urgency === 'critical' ? focusPlanStyles.itemCritical : {}),
+                    ...(item.urgency === 'high' ? focusPlanStyles.itemHigh : {}),
+                  }}
+                >
+                  <div style={focusPlanStyles.itemMain}>
+                    <div style={focusPlanStyles.itemTop}>
+                      <span style={focusPlanStyles.typeBadge(item.urgency)}>{item.type}</span>
+                      <span style={focusPlanStyles.detail}>{item.detail}</span>
+                    </div>
+                    <strong style={focusPlanStyles.itemTitle}>{item.title}</strong>
+                  </div>
+                  <span style={focusPlanStyles.action}>{item.actionLabel}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
         <MissionMap />
 
         <section style={announcementFeedStyles.shell}>
@@ -2236,6 +2361,143 @@ const dashPageInner = {
   display: 'flex',
   flexDirection: 'column',
   gap: 16,
+};
+
+const focusPlanStyles = {
+  shell: {
+    padding: 20,
+    borderRadius: 22,
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025))',
+    border: '1px solid rgba(255,255,255,0.09)',
+    boxShadow: '0 14px 34px rgba(0,0,0,0.28)',
+    backdropFilter: 'blur(16px)',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 16,
+    marginBottom: 14,
+  },
+  eyebrow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    color: '#a5b4fc',
+    fontSize: 11,
+    fontWeight: 800,
+    textTransform: 'uppercase',
+    letterSpacing: '0.14em',
+    marginBottom: 6,
+  },
+  title: {
+    margin: 0,
+    color: '#f8fafc',
+    fontSize: 22,
+    fontWeight: 900,
+    lineHeight: 1.1,
+  },
+  count: {
+    minWidth: 72,
+    textAlign: 'center',
+    padding: '9px 12px',
+    borderRadius: 14,
+    background: 'rgba(124,111,247,0.13)',
+    border: '1px solid rgba(124,111,247,0.22)',
+    color: '#ede9fe',
+    fontSize: 12,
+    fontWeight: 900,
+  },
+  list: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: 12,
+  },
+  item: {
+    width: '100%',
+    minHeight: 112,
+    textAlign: 'left',
+    borderRadius: 18,
+    padding: 16,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.035)',
+    color: '#eef0f6',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    gap: 14,
+    boxShadow: '0 10px 26px rgba(0,0,0,0.18)',
+  },
+  itemHigh: {
+    borderColor: 'rgba(251,191,36,0.24)',
+    background: 'linear-gradient(135deg, rgba(251,191,36,0.095), rgba(255,255,255,0.03))',
+  },
+  itemCritical: {
+    borderColor: 'rgba(248,113,113,0.28)',
+    background: 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(255,255,255,0.03))',
+  },
+  itemMain: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+    minWidth: 0,
+  },
+  itemTop: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  typeBadge: urgency => ({
+    padding: '5px 8px',
+    borderRadius: 999,
+    background: urgency === 'critical'
+      ? 'rgba(239,68,68,0.16)'
+      : urgency === 'high'
+        ? 'rgba(251,191,36,0.14)'
+        : 'rgba(124,111,247,0.12)',
+    border: urgency === 'critical'
+      ? '1px solid rgba(239,68,68,0.24)'
+      : urgency === 'high'
+        ? '1px solid rgba(251,191,36,0.22)'
+        : '1px solid rgba(124,111,247,0.2)',
+    color: urgency === 'critical'
+      ? '#fecaca'
+      : urgency === 'high'
+        ? '#fde68a'
+        : '#ddd6fe',
+    fontSize: 10,
+    fontWeight: 900,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  }),
+  detail: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: 700,
+    lineHeight: 1.35,
+  },
+  itemTitle: {
+    color: '#ffffff',
+    fontSize: 16,
+    lineHeight: 1.25,
+    fontWeight: 900,
+  },
+  action: {
+    alignSelf: 'flex-start',
+    color: '#bfdbfe',
+    fontSize: 12,
+    fontWeight: 900,
+  },
+  empty: {
+    padding: 18,
+    borderRadius: 18,
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px dashed rgba(255,255,255,0.12)',
+    color: '#cbd5e1',
+    fontSize: 14,
+    lineHeight: 1.5,
+  },
 };
 
 const summaryStyles = {
