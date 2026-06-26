@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/vicharanashala/cs13/main/client/public/logo.png" alt="Vicharanashala Logo" width="220"/>
+  <img src="https://vicharanashala.ai/assets/vled-iit-clear-BqWIp7DI.png" alt="Vicharanashala Logo" width="220"/>
 </p>
 
 <h1 align="center">Samagama — Internship Management Platform</h1>
